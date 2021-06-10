@@ -5,6 +5,8 @@ const path = require("path");
 // Conditionally include the dev tools installer to load React Dev Tools
 let installExtension, REACT_DEVELOPER_TOOLS;
 
+app.commandLine.appendSwitch('enable-features', 'ElectronSerialChooser');
+
 if (isDev) {
   const devTools = require("electron-devtools-installer");
   installExtension = devTools.default;
@@ -14,14 +16,32 @@ if (isDev) {
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 800,
-    height: 600,
+    height: 820,
+    icon: __dirname + '/favicon.ico',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
+      enableBlinkFeatures: 'Serial',
       preload: path.join(__dirname, "preload.js"),
     },
   });
+
+  mainWindow.setMenu(null);
+
+  mainWindow.webContents.session.on('select-serial-port', (event, portList, webContents, callback) => {
+    event.preventDefault();
+    console.log(portList);
+    const selectedPort = portList.find((device) => {
+      return device.productId === '24597' && device.vendorId === '1027'
+    });
+    console.log(selectedPort);
+    if (!selectedPort) {
+      callback('');
+    } else {
+      callback(selectedPort.portId);
+    }
+  })
 
   // Load from localhost if in development
   // Otherwise load index.html file
