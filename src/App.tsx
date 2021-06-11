@@ -18,15 +18,16 @@ import "./App.css";
 import "./Fonts.css";
 import "./bootstrap.min.css";
 import { useToasts } from 'react-toast-notifications';
-import { LCDView, LCDManager } from './components/LCDView';
+import { LCDView } from './components/LCDView';
+import { WebGLLCDRenderer } from './classes/WebGLLCDRenderer';
 
 function App() {
   const [serial, setSerial] = useState<Serial>();
   const [serialPort, setSerialPort] = useState<SerialPort>();
   const [debugCommands, setDebugCommands] = useState<(DebugNumberCommand | DebugTextCommand)[]>([]);
-  const [commands, setCommands] = useState<LCDCommand[]>([]);
+  const commands = useRef<LCDCommand[]>([]);
   const [connected, setConnected] = useState(false);
-  const lcdRef = useRef<LCDManager>();
+  const lcdRef = useRef<WebGLLCDRenderer>();
 
   const { addToast } = useToasts();
 
@@ -74,9 +75,9 @@ function App() {
           if (!lcdRef.current) return;
           const lcdManager = lcdRef.current;
           if (isDebugNumberCommand(command) || isDebugTextCommand(command)) {
-            setDebugCommands(state => state.concat([command]));
+            if (debugCommands.length < 200) setDebugCommands(state => state.concat([command]));
           } else {
-            setCommands(state => state.concat([command]));
+            commands.current.push(command);
           }
           if (isDisplayCharCommand(command)) {
             lcdManager.insertText(command.text);
@@ -114,7 +115,7 @@ function App() {
           serialPort.close();
           setSerialPort(undefined);
           setConnected(false);
-          addToast("There was an error receiving data from the microcontroller.", { appearance: 'error'});
+          addToast("Lost connection to the microcontroller.", { appearance: 'error'});
         }
       }
     } catch (error) {
@@ -128,8 +129,8 @@ function App() {
   const clearAll = () => {
     if (!lcdRef.current) return;
     const lcdManager = lcdRef.current;
-    setCommands([]);
-    setDebugCommands([]);
+    commands.current = [];
+    setDebugCommands(() => []);
     lcdManager.commandsReceived = 0;
     lcdManager.clearLines();
   }
@@ -159,10 +160,10 @@ function App() {
                 </Tabs>
                 <Tabs defaultActiveKey="debug" id="uncontrolled-tab-example" variant="tabs" style={{ marginTop: 16 }}>
                   <Tab eventKey="debug" title="Debug Infos">
-                    <DebugCommandView clear={() => setDebugCommands([])} clearAll={clearAll} commands={debugCommands} />
+                    <DebugCommandView clear={() => setDebugCommands(() => [])} clearAll={clearAll} commands={debugCommands} />
                   </Tab>
                   <Tab eventKey="display" title="Display Commands">
-                    <DisplayCommandView clear={() => setCommands([])} clearAll={clearAll} commands={commands} />
+                    <DisplayCommandView clear={() => commands.current = []} clearAll={clearAll} commands={commands.current} />
                   </Tab>
                 </Tabs>
               </>

@@ -1,13 +1,11 @@
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent, useEffect, useState } from "react";
 import { Button, ButtonGroup, Table } from "react-bootstrap";
 import { LCDCommand } from "../classes/CommandParser";
 import { printTime } from "../utils";
 
 export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], clear: () => void, clearAll: () => void }> = ({ commands, clear, clearAll }) => {
     const  [reverse, setReverse] = useState<boolean>(false);
-    const commandsCopy = commands.slice();
-
-    if (reverse) commandsCopy.reverse();
+    const [commandsCopy, setCommandsCopy] = useState<LCDCommand[]>([]);
     
     return (
         <div style={{ flex: "1 1 auto", backgroundColor: "#343a40" }}>
@@ -23,7 +21,7 @@ export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], cle
                         {
                             commandsCopy.length === 0 ? (
                                 <tr>
-                                    <td colSpan={2}>We did not receive any display commands yet. 😢</td>
+                                    <td colSpan={2}>Press the "Query Displaycommands" button to show display commands.</td>
                                 </tr>
                             ) : null
                         }
@@ -40,8 +38,9 @@ export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], cle
             </div>
             <div style={{ padding: 8, backgroundColor: "rgba(255,255,255,.05)" }}>
                 <ButtonGroup>
+                    <Button onClick={() => setCommandsCopy(commands)}>Query Displaycommands</Button>
                     <Button onClick={clear}>Clear Displaycommands</Button>
-                    <Button onClick={clearAll}>Clear All</Button>
+                    <Button onClick={() => {clearAll(); setCommandsCopy(commands);}}>Clear All</Button>
                 </ButtonGroup>
             </div>
 
