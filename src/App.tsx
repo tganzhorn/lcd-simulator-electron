@@ -12,13 +12,13 @@ import {
   isDisplayClearCommand
 } from './classes/CommandParser';
 import { DebugCommandView } from './components/DebugCommandView';
-import { LCDView, LCDBuffer } from './components/LCDView';
 import { Navbar, Container, Jumbotron, Tabs, Tab, Button } from 'react-bootstrap';
 import { DisplayCommandView } from './components/DisplayCommandView';
 import "./App.css";
 import "./Fonts.css";
 import "./bootstrap.min.css";
 import { useToasts } from 'react-toast-notifications';
+import { LCDView, LCDManager } from './components/LCDView';
 
 function App() {
   const [serial, setSerial] = useState<Serial>();
@@ -26,7 +26,7 @@ function App() {
   const [debugCommands, setDebugCommands] = useState<(DebugNumberCommand | DebugTextCommand)[]>([]);
   const [commands, setCommands] = useState<LCDCommand[]>([]);
   const [connected, setConnected] = useState(false);
-  const lcdRef = useRef<[LCDBuffer, React.Dispatch<React.SetStateAction<LCDBuffer>>]>();
+  const lcdRef = useRef<LCDManager>();
 
   const { addToast } = useToasts();
 
@@ -72,23 +72,23 @@ function App() {
 
         commandParser.onNewCommand = (command: LCDCommand) => {
           if (!lcdRef.current) return;
-          const [buffer, setBuffer] = lcdRef.current;
+          const lcdManager = lcdRef.current;
           if (isDebugNumberCommand(command) || isDebugTextCommand(command)) {
             setDebugCommands(state => state.concat([command]));
           } else {
             setCommands(state => state.concat([command]));
           }
           if (isDisplayCharCommand(command)) {
-            setBuffer(buffer.insertText(command.text));
+            lcdManager.insertText(command.text);
           }
           if (isDisplayTextCommand(command)) {
-            setBuffer(buffer.insertTextAt(command.text, command.row, command.column));
+            lcdManager.insertTextAt(command.text, command.row, command.column);
           }
           if (isDisplaySetCursorCommand(command)) {
-            setBuffer(buffer.setCursor(command.row, command.column));
+            lcdManager.setCursor(command.row, command.column);
           }
           if (isDisplayClearCommand(command)) {
-            setBuffer(buffer.clearLines());
+            lcdManager.clearLines();
           }
 
         };
@@ -127,10 +127,11 @@ function App() {
 
   const clearAll = () => {
     if (!lcdRef.current) return;
-    const [buffer, setBuffer] = lcdRef.current;
+    const lcdManager = lcdRef.current;
     setCommands([]);
     setDebugCommands([]);
-    setBuffer(new LCDBuffer(buffer.rows, buffer.columns));
+    lcdManager.commandsReceived = 0;
+    lcdManager.clearLines();
   }
 
   return (
@@ -169,7 +170,7 @@ function App() {
               <>
                 <h1>No device connected!</h1>
                 <p>
-                  Please connect to a the microcontroller by pressing the "Open COM Port" button.
+                  Please connect to a microcontroller by pressing the "Open COM Port" button.
                 </p>
                 <Button variant="primary" onClick={handleCOMPortSelection}>Open COM Port</Button>
               </>
