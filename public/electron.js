@@ -1,6 +1,7 @@
 const { app, BrowserWindow } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
+const ipcMain = require('electron').ipcMain;
 
 // Conditionally include the dev tools installer to load React Dev Tools
 let installExtension, REACT_DEVELOPER_TOOLS;
@@ -15,9 +16,11 @@ if (isDev) {
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 820,
+    width: 490,
+    height: 670,
+    frame: false,
     icon: __dirname + '/favicon.ico',
+    transparent: true,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -27,15 +30,29 @@ function createWindow() {
     },
   });
 
+  ipcMain.on('close-window', () => {
+    mainWindow.close();
+  });
+
+  ipcMain.on('minimize-window', () => {
+    mainWindow.minimize();
+  });
+
+  ipcMain.on('maximize-window', () => {
+    mainWindow.maximize();
+  });
+
+  ipcMain.on('restore-window', () => {
+    mainWindow.restore();
+  })
+
   mainWindow.setMenu(null);
 
   mainWindow.webContents.session.on('select-serial-port', (event, portList, webContents, callback) => {
     event.preventDefault();
-    console.log(portList);
     const selectedPort = portList.find((device) => {
       return device.productId === '24597' && device.vendorId === '1027'
     });
-    console.log(selectedPort);
     if (!selectedPort) {
       callback('');
     } else {

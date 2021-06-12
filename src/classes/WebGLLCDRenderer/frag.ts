@@ -1,12 +1,12 @@
-export const frag = `
-#ifdef GL_ES
-    precision highp float;
-#endif
+// #version 300 es needs to be on the first line
+export const frag = `#version 300 es
+precision mediump float;
 
-varying vec2 vUV;
+in vec2 vUV;
 uniform sampler2D uTexture;
+out vec4 fragColor;
 
 void main() {
-    gl_FragColor = vec4(0, 0, 0, texture2D(uTexture, vUV).r);
+    fragColor = vec4(0, 0, 0, texture(uTexture, vUV).r);
 }
-`
+`;

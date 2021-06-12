@@ -3,6 +3,12 @@
   user-select: none;
 }
 
+body {
+  margin: 0;
+  padding: 0;
+  background-color: transparent !important;
+}
+
 .lcd:hover > div:first-child {
   visibility: visible;
   opacity: 1;
@@ -27,4 +33,12 @@
 ::-webkit-scrollbar-thumb {
   background-color: #ddd;
   border-radius: 4px;
+}
+
+.drag {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
 }

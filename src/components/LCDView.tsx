@@ -1,11 +1,10 @@
-import { forwardRef, ForwardRefExoticComponent, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { Button } from "react-bootstrap";
 import { WebGLLCDRenderer, font5x7, LCDCharBuffer } from "../classes/WebGLLCDRenderer";
 
-export const LCDView: ForwardRefExoticComponent<{}> = forwardRef((_, ref) => {
+export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const lcdWebGLRenderer = useRef<WebGLLCDRenderer>();
-    const [size, setSize] = useState(3);
     const lightRef = useRef<HTMLDivElement>(null);
     const lightRaf = useRef<number>(-1);
     const cmdRef = useRef<HTMLSpanElement>(null);
@@ -19,7 +18,7 @@ export const LCDView: ForwardRefExoticComponent<{}> = forwardRef((_, ref) => {
 
         const charBuffer = new LCDCharBuffer(font5x7, 7, 5, 32);
 
-        const renderer = new WebGLLCDRenderer(gl, 128, 64, charBuffer);
+        const renderer = new WebGLLCDRenderer(gl, 160, 104, charBuffer);
         renderer.startTicker();
 
         renderer.onReceiveCommand = () => {
@@ -54,16 +53,36 @@ export const LCDView: ForwardRefExoticComponent<{}> = forwardRef((_, ref) => {
     useImperativeHandle(ref, () => lcdWebGLRenderer.current);
 
     return (
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", backgroundColor: "#343a40", padding: 8, color: "white" }}>
-            <div>
-                <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+        <div style={{  
+            backgroundColor: "#343a40", 
+            padding: 8, 
+            color: "white",
+            display: "grid",
+            marginTop: 8
+        }}>
+            <div style={{ position: "relative", display: "inline-block", backgroundColor: "#5DFF00" }} className="lcd">
+                <canvas
+                    ref={canvasRef}
+                    width="160"
+                    height="104"
+                    style={{
+                        width: "100%",
+                        border: "8px solid transparent",
+                        imageRendering: "pixelated",
+                        aspectRatio: "2 / 1",
+                        opacity: 0.5
+                    }}
+                >
+                </canvas>
+            </div>
+            <div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 8}}>
+                <div style={{ display: "flex", alignItems: "center" }}>
                     <span>RX:</span>
-                    <div ref={lightRef} style={{ transition: "all 0.1s ease", marginLeft: 16, backgroundColor: "#aaa", borderRadius: "50%", width: 24, height: 24 }}></div>
+                    <div ref={lightRef} style={{ transition: "all 0.1s ease", marginLeft: 8, backgroundColor: "#aaa", borderRadius: "50%", width: 24, height: 24 }}></div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
                     <span>CMD: <span ref={cmdRef} style={{ fontFamily: "Roboto Mono", color: "lightblue" }}>0</span></span>
                 </div>
-                <label htmlFor="size" style={{ paddingRight: 8 }}>LCD-Size:</label>
                 <div>
                     <Button onClick={() => {
                         if (lcdWebGLRenderer.current) {
@@ -71,25 +90,6 @@ export const LCDView: ForwardRefExoticComponent<{}> = forwardRef((_, ref) => {
                         }
                     }}>Reset Display</Button>
                 </div>
-            </div>
-            <div style={{ position: "relative", display: "inline-block", backgroundColor: "#5DFF00" }} className="lcd">
-                <div style={{ position: "absolute", right: 0, top: 0 }}>
-                    <span onClick={() => setSize(size => Math.min(5, size + 0.1))}>➕</span>
-                    <span onClick={() => setSize(size => Math.max(2, size - 0.1))}>➖</span>
-                </div>
-                <canvas
-                    ref={canvasRef}
-                    width="128"
-                    height="64"
-                    style={{
-                        width: 128 * size,
-                        height: 64 * size,
-                        border: "8px solid transparent",
-                        imageRendering: "pixelated",
-                        opacity: 0.5
-                    }}
-                >
-                </canvas>
             </div>
         </div>
     )

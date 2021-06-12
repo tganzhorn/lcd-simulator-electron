@@ -11,7 +11,7 @@ export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand |
     
     return (
         <div style={{flex: "1 1 auto", backgroundColor: "#343a40"}}>
-            <div style={{height: 300, overflowY: "auto"}}>
+            <div style={{height: 200, overflowY: "auto"}}>
                 <Table striped bordered hover size="sm" variant="dark">
                     <thead>
                         <tr>
