@@ -11,6 +11,8 @@ export class WebGLLCDRenderer {
     readonly height: number;
 
     readonly charBuffer: LCDCharBuffer;
+    vertexBuffer: WebGLBuffer | null = null;
+    shaderProgram: WebGLProgram | null = null;
 
     cursorRow: number = 0;
     cursorColumn: number = 0;
@@ -46,6 +48,7 @@ export class WebGLLCDRenderer {
         const shaderProgram = gl.createProgram();
         if (!shaderProgram) return;
 
+
         gl.attachShader(shaderProgram, fragmentShader);
         gl.attachShader(shaderProgram, vertexShader);
 
@@ -65,11 +68,13 @@ export class WebGLLCDRenderer {
         gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW);
 
         gl.useProgram(shaderProgram);
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 
         const aVertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(aVertexPosition);
         gl.vertexAttribPointer(aVertexPosition, 2, gl.FLOAT, false, 0, 0);
+
+        this.vertexBuffer = vertexBuffer;
+        this.shaderProgram = shaderProgram;
     }
 
     setCursor(row: number | null, column: number | null) {
@@ -147,5 +152,14 @@ export class WebGLLCDRenderer {
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
         this.onDraw();
         this.dirty = false;
+    }
+
+    destroy() {
+        this.stopTicker();
+        this.gl.deleteProgram(this.shaderProgram);
+        this.gl.deleteTexture(this.texture);
+        this.gl.deleteBuffer(this.vertexBuffer);
+        this.onReceiveCommand = () => {};
+        this.onDraw = () => {};
     }
 }

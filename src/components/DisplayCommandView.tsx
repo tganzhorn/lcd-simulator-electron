@@ -6,14 +6,10 @@ import { printTime } from "../utils";
 export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], clear: () => void, clearAll: () => void }> = ({ commands, clear, clearAll }) => {
     const  [reverse, setReverse] = useState<boolean>(false);
     const [commandsCopy, setCommandsCopy] = useState<LCDCommand[]>([]);
-
-    useEffect(() => {
-        console.log("commands changed")
-    }, [commands]);
     
     return (
-        <div style={{ flex: "1 1 auto", backgroundColor: "#343a40" }}>
-            <div style={{ height: 200, overflowY: "auto" }}>
+        <div style={{ backgroundColor: "#343a40" }}>
+            <div style={{ height: 200, overflowY: "auto", resize: "vertical" }}>
                 <Table striped bordered hover size="sm" variant="dark">
                     <thead>
                         <tr style={{ position: "sticky" }}>

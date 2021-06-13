@@ -22,9 +22,7 @@ function createWindow() {
     icon: __dirname + '/favicon.ico',
     transparent: true,
     webPreferences: {
-      nodeIntegration: false,
       contextIsolation: true,
-      enableRemoteModule: false,
       enableBlinkFeatures: 'Serial',
       preload: path.join(__dirname, "preload.js"),
     },
@@ -43,8 +41,12 @@ function createWindow() {
   });
 
   ipcMain.on('restore-window', () => {
-    mainWindow.restore();
-  })
+    mainWindow.unmaximize();
+  });
+
+  ipcMain.on('open-devtools', () => {
+    mainWindow.webContents.openDevTools({ mode: "detach" });
+  });
 
   mainWindow.setMenu(null);
 

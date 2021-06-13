@@ -31,7 +31,8 @@ declare global {
       close: () => {},
       minimize: () => {},
       maximize: () => {},
-      restore: () => {}
+      restore: () => {},
+      devTools: () => {}
     }
   }
 }
@@ -45,6 +46,7 @@ function App() {
   const commands = useRef<LCDCommand[]>([]);
   const [connected, setConnected] = useState(false);
   const lcdRef = useRef<WebGLLCDRenderer | undefined>();
+  const [fullscreen, setFullscreen] = useState<boolean>();
 
   const { addToast } = useToasts();
 
@@ -54,6 +56,20 @@ function App() {
   useEffect(() => {
     if (navigator.serial) {
       setSerial(navigator.serial);
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if(event.key === 'd' || event.key === 'D') {
+        if (event.ctrlKey) {
+          api.devTools();
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
     }
   }, []);
 
@@ -122,8 +138,8 @@ function App() {
               break;
             }
             if (value) {
-              commandParser.parseValue(value);
               writer.write(ack);
+              commandParser.parseValue(value);
             }
           }
         } catch (error) {
@@ -153,17 +169,29 @@ function App() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", border: "1px solid #343a40", borderRadius: "0.25rem", backgroundColor: "#e9ecef", overflow: "hidden"}}>
-      <Navbar bg="dark" variant="dark" expand="lg" className="drag">
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", border: "1px solid #343a40", paddingBottom: 8, borderRadius: "0.25rem", backgroundColor: "#e9ecef", overflowY: "auto"}}>
+      <Navbar bg="dark" variant="dark" expand="lg" className="drag" style={{position: "sticky", top: 0, zIndex: 1000}}>
         <Container>
           <Navbar.Brand>
             LCD-Simulator
           </Navbar.Brand>
           <ButtonGroup>
-          <Button onClick={() => api.minimize()} className="no-drag"><img src={minmize_icon} width="20" height="20" /></Button>
-          <Button onClick={() => api.maximize()} className="no-drag"><img src={fullscreen_icon} width="20" height="20" /></Button>
-          <Button onClick={() => api.restore()} className="no-drag"><img src={fullscreen_close_icon} width="20" height="20" /></Button>
-          <Button onClick={() => api.close()} className="no-drag"><img src={close_icon} width="20" height="20" /></Button>
+          <Button onClick={() => api.minimize()} className="no-drag"><img src={minmize_icon} width="20" height="20" alt="min" /></Button>
+          <Button onClick={() => {
+            if (fullscreen) {
+              api.restore();
+            } else {
+              api.maximize()
+            }; 
+            setFullscreen(state => !state);
+          }} className="no-drag">
+            {
+              fullscreen ? 
+              <img src={fullscreen_close_icon} width="20" height="20" alt="restore" /> :
+              <img src={fullscreen_icon} width="20" height="20" alt="max" />
+            }
+          </Button>
+          <Button onClick={() => api.close()} className="no-drag"><img src={close_icon} width="20" height="20" alt="close" /></Button>
           </ButtonGroup>
         </Container>
       </Navbar>
@@ -172,7 +200,7 @@ function App() {
           connected ? (
             <>
               <LCDView ref={lcdRef} />
-              <Tabs defaultActiveKey="debug" id="uncontrolled-tab-example" variant="tabs" style={{ marginTop: 8 }}>
+              <Tabs defaultActiveKey="debug" id="uncontrolled-tab-example" variant="tabs" style={{ marginTop: 8}}>
                 <Tab eventKey="debug" title="Debug Infos">
                   <DebugCommandView clear={() => setDebugCommands(() => [])} clearAll={clearAll} commands={debugCommands} />
                 </Tab>
@@ -186,7 +214,7 @@ function App() {
               <h2>No device connected!</h2>
               <p>
                 Please connect to a microcontroller by pressing the "Open COM Port" button.
-                </p>
+              </p>
               <Button variant="primary" onClick={handleCOMPortSelection}>Open COM Port</Button>
             </div>
           )

@@ -10,8 +10,8 @@ export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand |
     if (reverse) commandsCopy.reverse();
     
     return (
-        <div style={{flex: "1 1 auto", backgroundColor: "#343a40"}}>
-            <div style={{height: 200, overflowY: "auto"}}>
+        <div style={{ backgroundColor: "#343a40" }}>
+            <div style={{height: 200, overflowY: "auto", resize: "vertical"}}>
                 <Table striped bordered hover size="sm" variant="dark">
                     <thead>
                         <tr>

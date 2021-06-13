@@ -18,7 +18,7 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
 
         const charBuffer = new LCDCharBuffer(font5x7, 7, 5, 32);
 
-        const renderer = new WebGLLCDRenderer(gl, 160, 104, charBuffer);
+        const renderer = new WebGLLCDRenderer(gl, 128, 64, charBuffer);
         renderer.startTicker();
 
         renderer.onReceiveCommand = () => {
@@ -35,7 +35,7 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
                 lightRef.current.style.boxShadow = "0 0 0 #aaa";
             }, 300);
         }
-
+        
         renderer.onDraw = () => {
             if (!cmdRef.current) return;
 
@@ -45,7 +45,7 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
         lcdWebGLRenderer.current = renderer;
 
         return () => {
-            renderer.stopTicker();
+            renderer.destroy();
             window.clearTimeout(lightRaf.current);
         }
     }, []);
@@ -53,9 +53,9 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
     useImperativeHandle(ref, () => lcdWebGLRenderer.current);
 
     return (
-        <div style={{  
-            backgroundColor: "#343a40", 
-            padding: 8, 
+        <div style={{
+            backgroundColor: "#343a40",
+            padding: 8,
             color: "white",
             display: "grid",
             marginTop: 8
@@ -63,8 +63,8 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
             <div style={{ position: "relative", display: "inline-block", backgroundColor: "#5DFF00" }} className="lcd">
                 <canvas
                     ref={canvasRef}
-                    width="160"
-                    height="104"
+                    width={128}
+                    height={64}
                     style={{
                         width: "100%",
                         border: "8px solid transparent",
@@ -75,7 +75,7 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
                 >
                 </canvas>
             </div>
-            <div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 8}}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 8 }}>
                 <div style={{ display: "flex", alignItems: "center" }}>
                     <span>RX:</span>
                     <div ref={lightRef} style={{ transition: "all 0.1s ease", marginLeft: 8, backgroundColor: "#aaa", borderRadius: "50%", width: 24, height: 24 }}></div>
@@ -88,7 +88,7 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
                         if (lcdWebGLRenderer.current) {
                             lcdWebGLRenderer.current.clearLines(); lcdWebGLRenderer.current.commandsReceived = 0
                         }
-                    }}>Reset Display</Button>
+                    }}>Reset</Button>
                 </div>
             </div>
         </div>

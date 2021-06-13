@@ -1,6 +1,6 @@
 {
   "name": "lcd-simulator-electron",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "author": "Tobias Ganzhorn",
   "description": "Simple LCD-Simulator for the Mikrocontroller-Labor-Board.",
