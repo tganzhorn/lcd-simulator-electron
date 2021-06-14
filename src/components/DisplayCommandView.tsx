@@ -1,4 +1,4 @@
-import { CommandBar, DetailsList, IColumn, ICommandBarItemProps, ScrollablePane, SelectionMode } from "@fluentui/react";
+import { CommandBar, DetailsList, IColumn, ICommandBarItemProps, SelectionMode } from "@fluentui/react";
 import { useEffect } from "react";
 import { FunctionComponent, useState } from "react";
 import { LCDCommand } from "../classes/CommandParser";
@@ -10,8 +10,12 @@ export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], cle
     const [commandsCopy, setCommandsCopy] = useState<LCDCommand[]>([]);
 
     useEffect(() => {
-        setCommandsCopy(commands.slice());
+        setCommandsCopy(reverse ? commands.slice().reverse() : commands.slice());
     }, []);
+
+    useEffect(() => {
+        setCommandsCopy(reverse ? commands.slice().reverse() : commands.slice());
+    }, [reverse]);
 
     const commandBardItems: ICommandBarItemProps[] = [
         {
@@ -57,7 +61,7 @@ export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], cle
             fieldName: "timestamp",
             data: "timestamp",
             isSorted: true,
-            isSortedDescending: true,
+            isSortedDescending: !reverse,
             onRender: (command: LCDCommand) => printTime(command.timestamp),
             onColumnClick: () => setReverse(state => !state)
         },

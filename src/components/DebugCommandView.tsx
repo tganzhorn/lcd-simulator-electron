@@ -25,7 +25,7 @@ const printNumber = (number: number, mode: DebugNumberModes) => {
 
 export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand | DebugNumberCommand)[], clear: () => void, clearAll: () => void }> = ({ commands, clear, clearAll }) => {
     const [reverse, setReverse] = useState<boolean>(false);
-    const commandsCopy = reverse ? commands.slice().reverse() : commands;
+    const commandsCopy = reverse ? commands.slice().reverse() : commands.slice();
 
     const commandBardItems: ICommandBarItemProps[] = [
         {
@@ -55,7 +55,7 @@ export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand |
             fieldName: "timestamp",
             data: "timestamp",
             isSorted: true,
-            isSortedDescending: true,
+            isSortedDescending: !reverse,
             onRender: (command: DebugTextCommand | DebugNumberCommand) => printTime(command.timestamp),
             onColumnClick: () => setReverse(state => !state)
         },
