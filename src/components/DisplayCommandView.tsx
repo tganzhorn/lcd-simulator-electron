@@ -71,6 +71,15 @@ export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], cle
             minWidth: 50,
             maxWidth: 150,
             data: "string",
+            fieldName: "type",
+            isMultiline: true
+        },
+        {
+            key: "text",
+            name: "Text",
+            minWidth: 50,
+            maxWidth: 150,
+            data: "string",
             fieldName: "text",
             isMultiline: true
         },

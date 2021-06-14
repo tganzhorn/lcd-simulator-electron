@@ -140,7 +140,9 @@ function App() {
         } catch (error) {
           reader.releaseLock();
           writer.releaseLock();
-          serialPort.close();
+          try {
+            serialPort.close();
+          } catch (e) {};
           setSerialPort(undefined);
           setConnected(false);
           addToast("Lost connection to the microcontroller.", { appearance: 'error', autoDismiss: true });

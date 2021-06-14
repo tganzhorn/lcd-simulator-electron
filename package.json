@@ -71,7 +71,7 @@
       "type": "development"
     },
     "win": {
-      "target": "portable",
+      "target": "nsis",
       "icon": "./public/ms-icon-310x310.png"
     },
     "linux": {
