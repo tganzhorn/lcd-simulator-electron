@@ -1,12 +1,12 @@
 * {
-  font-family: 'Roboto', sans-serif;
   user-select: none;
+  font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: transparent !important;
+  background-color: #e2dfdc;
 }
 
 .lcd:hover > div:first-child {
@@ -23,22 +23,4 @@ body {
 
 .lcd {
   user-select: none;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  background-color: #343a40;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: #ddd;
-  border-radius: 4px;
-}
-
-.drag {
-  -webkit-app-region: drag;
-}
-
-.no-drag {
-  -webkit-app-region: no-drag;
 }

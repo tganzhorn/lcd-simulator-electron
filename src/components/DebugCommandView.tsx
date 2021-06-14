@@ -1,107 +1,113 @@
+import { CommandBar, ICommandBarItemProps, DetailsList, IColumn, SelectionMode } from "@fluentui/react";
 import { FunctionComponent, useState } from "react";
-import { Button, ButtonGroup, Table } from "react-bootstrap";
 import { DebugNumberCommand, DebugNumberModes, DebugTextCommand, isDebugNumberCommand, isDebugTextCommand } from "../classes/CommandParser";
 import { printTime, fillZeroes } from '../utils';
+import { Card } from './Card';
+
+const printNumber = (number: number, mode: DebugNumberModes) => {
+    if (mode === "u8hex") {
+        return `0x${fillZeroes(number.toString(16), 2)}`;
+    }
+    if (mode === "u16hex") {
+        return `0x${fillZeroes(number.toString(16), 4)}`;
+    }
+    if (mode === "u32hex") {
+        return `0x${fillZeroes(number.toString(16), 8)}`;
+    }
+    if (mode === "u8bin") {
+        return `0b${fillZeroes(number.toString(2), 8)}`;
+    }
+    if (mode === "u16bin") {
+        return `0b${fillZeroes(number.toString(2), 16)}`;
+    }
+    return number.toString();
+}
 
 export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand | DebugNumberCommand)[], clear: () => void, clearAll: () => void }> = ({ commands, clear, clearAll }) => {
-    const  [reverse, setReverse] = useState<boolean>(false);
-    const commandsCopy = commands.slice();
+    const [reverse, setReverse] = useState<boolean>(false);
+    const commandsCopy = reverse ? commands.slice().reverse() : commands;
 
-    if (reverse) commandsCopy.reverse();
-    
+    const commandBardItems: ICommandBarItemProps[] = [
+        {
+            key: "clearDebug",
+            text: "Clear debug",
+            iconProps: {
+                iconName: "Clear"
+            },
+            onClick: clear
+        },
+        {
+            key: "clearAll",
+            text: "Clear all",
+            iconProps: {
+                iconName: "Clear"
+            },
+            onClick: clearAll
+        }
+    ];
+
+    const columns: IColumn[] = [
+        {
+            key: "time",
+            name: "Time",
+            minWidth: 70,
+            maxWidth: 70,
+            fieldName: "timestamp",
+            data: "timestamp",
+            isSorted: true,
+            isSortedDescending: true,
+            onRender: (command: DebugTextCommand | DebugNumberCommand) => printTime(command.timestamp),
+            onColumnClick: () => setReverse(state => !state)
+        },
+        {
+            key: "message",
+            name: "Message",
+            minWidth: 50,
+            maxWidth: 150,
+            data: "string",
+            fieldName: "text",
+            isMultiline: true,
+            onRender: (command: DebugTextCommand | DebugNumberCommand) => {
+                if (isDebugTextCommand(command)) {
+                    let color = "";
+                    let icon = "";
+                    if (command.mode === "error") {
+                        icon = "❌ ";
+                        color = "darkred";
+                    }
+                    if (command.mode === "ok") {
+                        icon = "✔ ";
+                        color = "darkgreen";
+                    }
+                    return <span style={{color}}>{icon + command.text}</span>
+                }
+            }
+        },
+        {
+            key: "number",
+            name: "Number",
+            data: "number",
+            minWidth: 50,
+            fieldName: "number",
+            onRender: (command: DebugTextCommand | DebugNumberCommand) => {
+                if (isDebugNumberCommand(command)) {
+                    return printNumber(command.number, command.mode);
+                }
+            }
+        }
+    ]
+
     return (
-        <div style={{ backgroundColor: "#343a40" }}>
-            <div style={{height: 200, overflowY: "auto", resize: "vertical"}}>
-                <Table striped bordered hover size="sm" variant="dark">
-                    <thead>
-                        <tr>
-                            <th>Time <span style={{cursor: "pointer"}} onClick={() => setReverse(!reverse)}>{reverse ? "🔽" : "🔼"}</span></th>
-                            <th>Message</th>
-                            <th>Number</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            commands.length === 0 ? (
-                                <tr>
-                                    <td colSpan={3}>We did not receive any debug messages yet. 😢</td>
-                                </tr>
-                            ) : null
-                        }
-                        {
-                            commandsCopy.map((command, index) => {
-                                if (isDebugTextCommand(command)) {
-                                    return <DebugText key={index + command.timestamp.getTime()} command={command} />;
-                                }
-                                if (isDebugNumberCommand(command)) {
-                                    return <DebugNumber key={index + command.timestamp.getTime()} command={command} />;
-                                }
-                                return null;
-                            })
-                        }
-                    </tbody>
-                </Table>
+        <Card>
+            <div style={{height: 200, overflowY: "scroll", resize: "vertical"}}>
+                <DetailsList
+                    columns={columns}
+                    items={commandsCopy}
+                    selectionMode={SelectionMode.none}
+                    compact={true}
+                />
             </div>
-            <div style={{padding: 8, backgroundColor: "rgba(255,255,255,.05)"}}>
-                <ButtonGroup>
-                    <Button onClick={clear}>Clear Log</Button>
-                    <Button onClick={clearAll}>Clear All</Button>
-                </ButtonGroup>
-            </div>
-            
-        </div>
-    )
-}
-
-const DebugText: FunctionComponent<{ command: DebugTextCommand }> = ({ command }) => {
-    const { timestamp, mode, text } = command;
-
-    let color = "";
-    let icon = "";
-    if (mode === "error") {
-        icon = "❌ ";
-        color = "orangered";
-    }
-    if (mode === "ok") {
-        icon = "✔ ";
-        color = "lightgreen";
-    }
-
-    return (
-        <tr>
-            <td>{printTime(timestamp)}</td>
-            <td style={{ color: color }} colSpan={2}>{icon + text}</td>
-        </tr>
-    )
-}
-
-const DebugNumber: FunctionComponent<{ command: DebugNumberCommand }> = ({ command }) => {
-    const { timestamp, number, text, mode } = command;
-
-    const printNumber = (number: number, mode: DebugNumberModes) => {
-        if (mode === "u8hex") {
-            return `0x${fillZeroes(number.toString(16), 2)}`;
-        }
-        if (mode === "u16hex") {
-            return `0x${fillZeroes(number.toString(16), 4)}`;
-        }
-        if (mode === "u32hex") {
-            return `0x${fillZeroes(number.toString(16), 8)}`;
-        }
-        if (mode === "u8bin") {
-            return `0b${fillZeroes(number.toString(2), 8)}`;
-        }
-        if (mode === "u16bin") {
-            return `0b${fillZeroes(number.toString(2), 16)}`;
-        }
-        return number.toString();
-    }
-
-    return (
-        <tr>
-            <td>{printTime(timestamp)}</td>
-            <td>{text}</td>
-            <td style={{fontFamily: "'Roboto Mono', monospace", color: "lightblue"}}>{printNumber(number, mode)}</td>
-        </tr>
+            <CommandBar items={commandBardItems} />
+        </Card>
     )
 }

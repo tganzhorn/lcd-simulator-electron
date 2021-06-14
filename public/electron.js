@@ -17,10 +17,8 @@ if (isDev) {
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 490,
-    height: 670,
-    frame: false,
+    height: 640,
     icon: __dirname + '/favicon.ico',
-    transparent: true,
     webPreferences: {
       contextIsolation: true,
       enableBlinkFeatures: 'Serial',

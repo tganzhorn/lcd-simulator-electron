@@ -1,5 +1,6 @@
+import { Card } from "./Card";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import { Button } from "react-bootstrap";
+import { CommandBar, Text } from '@fluentui/react';
 import { WebGLLCDRenderer, font5x7, LCDCharBuffer } from "../classes/WebGLLCDRenderer";
 
 export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => {
@@ -53,44 +54,46 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
     useImperativeHandle(ref, () => lcdWebGLRenderer.current);
 
     return (
-        <div style={{
-            backgroundColor: "#343a40",
-            padding: 8,
-            color: "white",
-            display: "grid",
-            marginTop: 8
-        }}>
-            <div style={{ position: "relative", display: "inline-block", backgroundColor: "#5DFF00" }} className="lcd">
+        <Card style={{ display: "flex", flexDirection: "column"}}>
+            <div style={{ position: "relative", backgroundColor: "#5DFF00" }} className="lcd">
                 <canvas
                     ref={canvasRef}
                     width={128}
                     height={64}
                     style={{
                         width: "100%",
-                        border: "8px solid transparent",
                         imageRendering: "pixelated",
                         aspectRatio: "2 / 1",
-                        opacity: 0.5
+                        opacity: 0.5,
+                        resize: "vertical",
+                        margin: 0
                     }}
                 >
                 </canvas>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingLeft: 8 }}>
                 <div style={{ display: "flex", alignItems: "center" }}>
-                    <span>RX:</span>
-                    <div ref={lightRef} style={{ transition: "all 0.1s ease", marginLeft: 8, backgroundColor: "#aaa", borderRadius: "50%", width: 24, height: 24 }}></div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                    <span>CMD: <span ref={cmdRef} style={{ fontFamily: "Roboto Mono", color: "lightblue" }}>0</span></span>
+                    <Text>RX:</Text>
+                    <div ref={lightRef} style={{ transition: "all 0.1s ease", marginLeft: 8, backgroundColor: "#aaa", borderRadius: "50%", width: 16, height: 16 }}></div>
                 </div>
                 <div>
-                    <Button onClick={() => {
-                        if (lcdWebGLRenderer.current) {
-                            lcdWebGLRenderer.current.clearLines(); lcdWebGLRenderer.current.commandsReceived = 0
-                        }
-                    }}>Reset</Button>
+                    <Text style={{fontSize: 14}}>CMD: <span ref={cmdRef} style={{ fontFamily: "Roboto Mono", color: "lightblue" }}>0</span></Text>
                 </div>
+                <CommandBar items={[
+                    {
+                        key: "reset",
+                        text: "Reset",
+                        iconProps: {
+                            iconName: "RevToggleKey"
+                        },
+                        onClick: () => {
+                            if (lcdWebGLRenderer.current) {
+                                lcdWebGLRenderer.current.clearLines(); lcdWebGLRenderer.current.commandsReceived = 0
+                            }
+                        }
+                    }
+                ]} />
             </div>
-        </div>
+        </Card>
     )
 });

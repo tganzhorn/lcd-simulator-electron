@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   CommandParser,
   LCDCommand,
@@ -12,18 +12,14 @@ import {
   isDisplayClearCommand
 } from './classes/CommandParser';
 import { DebugCommandView } from './components/DebugCommandView';
-import { Navbar, Container, Tabs, Tab, Button, ButtonGroup } from 'react-bootstrap';
+import { PrimaryButton, PivotItem, Pivot, Text } from '@fluentui/react';
 import { DisplayCommandView } from './components/DisplayCommandView';
 import "./App.css";
 import "./Fonts.css";
-import "./bootstrap.min.css";
 import { useToasts } from 'react-toast-notifications';
 import { LCDView } from './components/LCDView';
 import { WebGLLCDRenderer } from './classes/WebGLLCDRenderer';
-import fullscreen_icon from './icons/fullscreen.png';
-import fullscreen_close_icon from './icons/close_fullscreen.png';
-import minmize_icon from './icons/minimize.png';
-import close_icon from './icons/close.png';
+import { Card } from './components/Card';
 
 declare global {
   interface Window {
@@ -46,7 +42,6 @@ function App() {
   const commands = useRef<LCDCommand[]>([]);
   const [connected, setConnected] = useState(false);
   const lcdRef = useRef<WebGLLCDRenderer | undefined>();
-  const [fullscreen, setFullscreen] = useState<boolean>();
 
   const { addToast } = useToasts();
 
@@ -59,7 +54,7 @@ function App() {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if(event.key === 'd' || event.key === 'D') {
+      if (event.key === 'd' || event.key === 'D') {
         if (event.ctrlKey) {
           api.devTools();
         }
@@ -89,7 +84,7 @@ function App() {
       setSerialPort(serialPort);
     } catch (error) {
       setConnected(false);
-      addToast("No microcontroller found!", { appearance: 'error' });
+      addToast("No microcontroller found!", { appearance: 'warning', autoDismiss: true });
     }
   }
 
@@ -148,78 +143,64 @@ function App() {
           serialPort.close();
           setSerialPort(undefined);
           setConnected(false);
-          addToast("Lost connection to the microcontroller.", { appearance: 'error' });
+          addToast("Lost connection to the microcontroller.", { appearance: 'error', autoDismiss: true });
         }
       }
     } catch (error) {
       serialPort.close();
       setSerialPort(undefined);
       setConnected(false);
-      addToast("Could not establish a connection with the microcontroller.", { appearance: 'error' });
+      addToast("Could not establish a connection with the microcontroller.", { appearance: 'error', autoDismiss: true });
     }
   }
 
   const clearAll = () => {
     if (!lcdRef.current) return;
     const lcdManager = lcdRef.current;
-    commands.current = [];
+    commands.current.length = 0;
     setDebugCommands(() => []);
-    lcdManager.commandsReceived = 0;
     lcdManager.clearLines();
+    lcdManager.commandsReceived = 0;
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", border: "1px solid #343a40", paddingBottom: 8, borderRadius: "0.25rem", backgroundColor: "#e9ecef", overflowY: "auto"}}>
-      <Navbar bg="dark" variant="dark" expand="lg" className="drag" style={{position: "sticky", top: 0, zIndex: 1000}}>
-        <Container>
-          <Navbar.Brand>
-            LCD-Simulator
-          </Navbar.Brand>
-          <ButtonGroup>
-          <Button onClick={() => api.minimize()} className="no-drag"><img src={minmize_icon} width="20" height="20" alt="min" /></Button>
-          <Button onClick={() => {
-            if (fullscreen) {
-              api.restore();
-            } else {
-              api.maximize()
-            }; 
-            setFullscreen(state => !state);
-          }} className="no-drag">
-            {
-              fullscreen ? 
-              <img src={fullscreen_close_icon} width="20" height="20" alt="restore" /> :
-              <img src={fullscreen_icon} width="20" height="20" alt="max" />
-            }
-          </Button>
-          <Button onClick={() => api.close()} className="no-drag"><img src={close_icon} width="20" height="20" alt="close" /></Button>
-          </ButtonGroup>
-        </Container>
-      </Navbar>
-      <Container>
-        {
-          connected ? (
-            <>
-              <LCDView ref={lcdRef} />
-              <Tabs defaultActiveKey="debug" id="uncontrolled-tab-example" variant="tabs" style={{ marginTop: 8}}>
-                <Tab eventKey="debug" title="Debug Infos">
-                  <DebugCommandView clear={() => setDebugCommands(() => [])} clearAll={clearAll} commands={debugCommands} />
-                </Tab>
-                <Tab eventKey="display" title="Display Commands">
-                  <DisplayCommandView clear={() => commands.current = []} clearAll={clearAll} commands={commands.current} />
-                </Tab>
-              </Tabs>
-            </>
-          ) : (
-            <div style={{ marginTop: 8, marginBottom: 16 }}>
-              <h2>No device connected!</h2>
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      height: "100vh",
+      padding: 16,
+      boxSizing: "border-box",
+      overflowY: "auto",
+      overflowX: "hidden",
+      maxWidth: 800,
+      margin: "0 auto"
+    }}
+    >
+      {
+        connected ? (
+          <>
+            <LCDView ref={lcdRef} />
+            <Pivot style={{ marginTop: 8 }}>
+              <PivotItem headerText="Debug Infos">
+                <DebugCommandView clear={() => setDebugCommands(() => [])} clearAll={clearAll} commands={debugCommands} />
+              </PivotItem>
+              <PivotItem headerText="Display Commands">
+                <DisplayCommandView clear={() => commands.current.length = 0} clearAll={clearAll} commands={commands.current} />
+              </PivotItem>
+            </Pivot>
+          </>
+        ) : (
+          <Card style={{ padding: 8 }}>
+            <Text variant="medium" ><h1>No device connected!</h1></Text>
+            <Text variant="medium">
               <p>
                 Please connect to a microcontroller by pressing the "Open COM Port" button.
               </p>
-              <Button variant="primary" onClick={handleCOMPortSelection}>Open COM Port</Button>
-            </div>
-          )
-        }
-      </Container>
+            </Text>
+            <PrimaryButton onClick={handleCOMPortSelection}>Open COM Port</PrimaryButton>
+          </Card>
+        )
+      }
     </div>
   );
 }
