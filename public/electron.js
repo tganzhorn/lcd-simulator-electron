@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow,  } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 const ipcMain = require('electron').ipcMain;
@@ -22,24 +22,9 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       enableBlinkFeatures: 'Serial',
+      webSecurity: true,
       preload: path.join(__dirname, "preload.js"),
     },
-  });
-
-  ipcMain.on('close-window', () => {
-    mainWindow.close();
-  });
-
-  ipcMain.on('minimize-window', () => {
-    mainWindow.minimize();
-  });
-
-  ipcMain.on('maximize-window', () => {
-    mainWindow.maximize();
-  });
-
-  ipcMain.on('restore-window', () => {
-    mainWindow.unmaximize();
   });
 
   ipcMain.on('open-devtools', () => {

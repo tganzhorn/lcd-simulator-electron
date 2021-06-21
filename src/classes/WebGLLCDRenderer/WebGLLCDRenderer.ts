@@ -2,6 +2,8 @@ import { LCDCharBuffer } from "./LCDCharBuffer";
 
 import { frag } from './frag';
 import { vert } from './vert';
+import { CommandTypes, isDisplayCharCommand, isDisplayClearCommand, isDisplayTextCommand, LCDCommand } from "../CommandParser";
+import { isDisplayClearRowCommand, isDisplayPrintMulColumnCommand, isDisplaySetCursorCommand } from "../CommandParser/DisplayCommands";
 
 export class WebGLLCDRenderer {
     readonly gl: WebGL2RenderingContext;
@@ -152,6 +154,29 @@ export class WebGLLCDRenderer {
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
         this.onDraw();
         this.dirty = false;
+    }
+
+    executeCommand(command: LCDCommand): void {
+        if (isDisplayCharCommand(command)) {
+            return this.insertText(command.text);
+        };
+        if (isDisplayTextCommand(command)) {
+            return this.insertTextAt(command.text, command.row, command.column);
+        };
+        if (isDisplayClearRowCommand(command)) {
+            return this.clearRow(command.row);
+        };
+        if (isDisplayPrintMulColumnCommand(command)) {
+            return;
+        };
+        if (isDisplaySetCursorCommand(command)) {
+            return this.setCursor(command.row, command.column);
+        };
+        if (isDisplayClearCommand(command)) {
+            return this.clearLines();
+        };
+        console.log(command);
+        return;
     }
 
     destroy() {

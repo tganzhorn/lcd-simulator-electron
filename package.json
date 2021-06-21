@@ -22,9 +22,7 @@
     "start": "concurrently -k \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electronmon .\"",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
-    "dist:win": "npm run build && electron-builder -w --x64 -c.extraMetadata.main=build/electron.js",
-    "dist:mac": "npm run build && electron-builder -m -c.extraMetadata.main=build/electron.js",
-    "dist:linux": "npm run build && electron-builder -l -c.extraMetadata.main=build/electron.js",
+    "dist:win": "npm run build && electron-builder -w -c.extraMetadata.main=build/electron.js",
     "react-start": "react-scripts start"
   },
   "eslintConfig": {
@@ -65,18 +63,9 @@
     "directories": {
       "buildResources": "public"
     },
-    "mac": {
-      "target": "dmg",
-      "category": "utilities",
-      "type": "development"
-    },
     "win": {
-      "target": "nsis",
+      "target": "portable",
       "icon": "./public/ms-icon-310x310.png"
-    },
-    "linux": {
-      "target": "deb",
-      "category": "Development"
     }
   }
 }

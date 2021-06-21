@@ -8,11 +8,11 @@ initializeIcons();
 
 ReactDOM.render(
   <React.StrictMode>
-    <ToastProvider placement="bottom-center">
-      <FabricBase>
-        <App />
-      </FabricBase>
-    </ToastProvider>
+      <ToastProvider placement="bottom-center">
+        <FabricBase>
+          <App />
+        </FabricBase>
+      </ToastProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );

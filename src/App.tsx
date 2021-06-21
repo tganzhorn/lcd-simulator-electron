@@ -21,18 +21,6 @@ import { LCDView } from './components/LCDView';
 import { WebGLLCDRenderer } from './classes/WebGLLCDRenderer';
 import { Card } from './components/Card';
 
-declare global {
-  interface Window {
-    api: {
-      close: () => {},
-      minimize: () => {},
-      maximize: () => {},
-      restore: () => {},
-      devTools: () => {}
-    }
-  }
-}
-
 const api = window.api;
 
 function App() {
@@ -106,20 +94,8 @@ function App() {
             if (debugCommands.length < 200) setDebugCommands(state => state.concat([command]));
           } else {
             commands.current.push(command);
+            lcdManager.executeCommand(command);
           }
-          if (isDisplayCharCommand(command)) {
-            lcdManager.insertText(command.text);
-          }
-          if (isDisplayTextCommand(command)) {
-            lcdManager.insertTextAt(command.text, command.row, command.column);
-          }
-          if (isDisplaySetCursorCommand(command)) {
-            lcdManager.setCursor(command.row, command.column);
-          }
-          if (isDisplayClearCommand(command)) {
-            lcdManager.clearLines();
-          }
-
         };
 
         const ack = new Uint8Array([7]);
@@ -142,7 +118,7 @@ function App() {
           writer.releaseLock();
           try {
             serialPort.close();
-          } catch (e) {};
+          } catch (e) { };
           setSerialPort(undefined);
           setConnected(false);
           addToast("Lost connection to the microcontroller.", { appearance: 'error', autoDismiss: true });
