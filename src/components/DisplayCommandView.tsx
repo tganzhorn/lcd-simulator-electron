@@ -11,11 +11,11 @@ export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], cle
 
     useEffect(() => {
         setCommandsCopy(reverse ? commands.slice().reverse() : commands.slice());
-    }, []);
+    }, [reverse, commands]);
 
     useEffect(() => {
         setCommandsCopy(reverse ? commands.slice().reverse() : commands.slice());
-    }, [reverse]);
+    }, [reverse, commands]);
 
     const commandBardItems: ICommandBarItemProps[] = [
         {

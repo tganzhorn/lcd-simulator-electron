@@ -1,15 +1,11 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   CommandParser,
   LCDCommand,
   isDebugNumberCommand,
-  isDisplayCharCommand,
   isDebugTextCommand,
   DebugNumberCommand,
   DebugTextCommand,
-  isDisplayTextCommand,
-  isDisplaySetCursorCommand,
-  isDisplayClearCommand
 } from './classes/CommandParser';
 import { DebugCommandView } from './components/DebugCommandView';
 import { PrimaryButton, PivotItem, Pivot, Text } from '@fluentui/react';
@@ -56,14 +52,6 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!serialPort) return;
-
-    openSerialPort(serialPort);
-
-    return () => { }
-  }, [serialPort]);
-
   const handleCOMPortSelection = async () => {
     try {
       if (!serial) return;
@@ -76,7 +64,7 @@ function App() {
     }
   }
 
-  const openSerialPort = async (serialPort: SerialPort) => {
+  const openSerialPort = useCallback(async (serialPort: SerialPort) => {
     try {
       await serialPort.open({ baudRate: 460800, parity: "none", stopBits: 1, dataBits: 8, flowControl: "none" });
       while (serialPort.readable && serialPort.writable) {
@@ -130,7 +118,15 @@ function App() {
       setConnected(false);
       addToast("Could not establish a connection with the microcontroller.", { appearance: 'error', autoDismiss: true });
     }
-  }
+  }, [addToast, debugCommands.length]);
+
+  useEffect(() => {
+    if (!serialPort) return;
+
+    openSerialPort(serialPort);
+
+    return () => { }
+  }, [serialPort, openSerialPort]);
 
   const clearAll = () => {
     if (!lcdRef.current) return;

@@ -2,7 +2,7 @@ import { LCDCharBuffer } from "./LCDCharBuffer";
 
 import { frag } from './frag';
 import { vert } from './vert';
-import { CommandTypes, isDisplayCharCommand, isDisplayClearCommand, isDisplayTextCommand, LCDCommand } from "../CommandParser";
+import { isDisplayCharCommand, isDisplayClearCommand, isDisplayTextCommand, LCDCommand } from "../CommandParser";
 import { isDisplayClearRowCommand, isDisplayPrintMulColumnCommand, isDisplaySetCursorCommand } from "../CommandParser/DisplayCommands";
 
 export class WebGLLCDRenderer {
