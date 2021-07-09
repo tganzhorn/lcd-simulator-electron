@@ -17,10 +17,7 @@ import { LCDView } from './components/LCDView';
 import { WebGLLCDRenderer } from './classes/WebGLLCDRenderer';
 import { Card } from './components/Card';
 
-const api = window.api;
-
 function App() {
-  const [serial, setSerial] = useState<Serial>();
   const [serialPort, setSerialPort] = useState<SerialPort>();
   const [debugCommands, setDebugCommands] = useState<(DebugNumberCommand | DebugTextCommand)[]>([]);
   const commands = useRef<LCDCommand[]>([]);
@@ -32,30 +29,9 @@ function App() {
   const readerRef = useRef<ReadableStreamDefaultReader<any>>();
   const writerRef = useRef<WritableStreamDefaultWriter<any>>();
 
-  useEffect(() => {
-    if (navigator.serial) {
-      setSerial(navigator.serial);
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'd' || event.key === 'D') {
-        if (event.ctrlKey) {
-          api.devTools();
-        }
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    }
-  }, []);
-
   const handleCOMPortSelection = async () => {
     try {
-      if (!serial) return;
-      const serialPort = await serial.requestPort();
+      const serialPort = await navigator.serial.requestPort();
       setConnected(true);
       setSerialPort(serialPort);
     } catch (error) {

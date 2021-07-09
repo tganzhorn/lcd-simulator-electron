@@ -1,7 +1,6 @@
 const { app, BrowserWindow,  } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
-const ipcMain = require('electron').ipcMain;
 
 // Conditionally include the dev tools installer to load React Dev Tools
 let installExtension, REACT_DEVELOPER_TOOLS;
@@ -25,10 +24,6 @@ function createWindow() {
       webSecurity: true,
       preload: path.join(__dirname, "preload.js"),
     },
-  });
-
-  ipcMain.on('open-devtools', () => {
-    mainWindow.webContents.openDevTools({ mode: "detach" });
   });
 
   mainWindow.setMenu(null);
