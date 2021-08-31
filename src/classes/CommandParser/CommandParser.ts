@@ -16,31 +16,6 @@ const CommandEnum = {
     "DISPLAY": 76,
 };
 
-/*
-const DisplayCommandEnum = {
-    DISPLAY_CHARS: 1,
-    SET_TEXT_CURSOR: 2,
-    SET_ROW: 3,
-    SET_COLUMN: 4,
-    PRINT_COLUMN: 5,
-    PRINT_MUL_COLUMN: 6,
-    PRINT_TEXT_NORMAL: 7,
-    PRINT_TEXT_INVERSE: 8,
-    PRINT_CHAR_NORMAL: 9,
-    PRINT_CHAR_INVERSE: 10,
-    PRINT_BIG_CHAR: null,
-    PRINT_BIG_TEXT: null,
-    PRINT_GRAFIK_LINE: 12,
-    CLEAR_ROW: 13,
-    CLEAR_LCD: 14
-}
-
-const DebugCommandEnum = {
-    TEXT: 1,
-    NUMBER: 2
-}
-*/
-
 export class CommandParser {
     currentCommand: Uint8Array = new Uint8Array(0);
     newCommand: boolean = false;
@@ -81,64 +56,12 @@ export class CommandParser {
     }
 
     parseCommand(): LCDCommand | false {
-        // TODO: Implement switch case. (copy pasta)
-        /*
-        switch (this.commandBuffer[0]) {
-            case CommandEnum.DISPLAY:
-                switch (this.commandBuffer[1]) {
-                    case DisplayCommandEnum.DISPLAY_CHARS:
-
-                    case DisplayCommandEnum.SET_TEXT_CURSOR:
-
-                    case DisplayCommandEnum.SET_ROW:
-
-                    case DisplayCommandEnum.SET_COLUMN:
-
-                    case DisplayCommandEnum.PRINT_MUL_COLUMN:
-
-                    case DisplayCommandEnum.PRINT_TEXT_NORMAL:
-                    case DisplayCommandEnum.PRINT_TEXT_INVERSE:
-
-                    case DisplayCommandEnum.PRINT_CHAR_NORMAL:
-                    case DisplayCommandEnum.PRINT_CHAR_INVERSE:
-
-                    case DisplayCommandEnum.PRINT_BIG_CHAR:
-                        console.log(this.commandBuffer);
-                        return false;
-                    case DisplayCommandEnum.PRINT_BIG_TEXT:
-                        console.log(this.commandBuffer);
-                        return false;
-                    case DisplayCommandEnum.PRINT_GRAFIK_LINE:
-
-                    case DisplayCommandEnum.CLEAR_ROW:
-
-                    case DisplayCommandEnum.CLEAR_LCD:
-
-                    default:
-                        console.log(this.commandBuffer);
-                        return false;
-                }
-            case CommandEnum.DEBUG:
-                switch (this.commandBuffer[1]) {
-                    case DebugCommandEnum.TEXT:
-
-                    case DebugCommandEnum.NUMBER:
-
-                    default:
-                        console.log(this.commandBuffer);
-                        return false;
-                }
-            default:
-                console.log(this.commandBuffer);
-                return false;
-        }
-        */
         // Display Commands
         if (this.commandBuffer[0] === CommandEnum.DISPLAY) {
             if (this.commandBuffer[1] === 1) { // chars
                 let text = "";
                 for (let i = 3; i < this.commandBuffer.length; i++) {
-                    text += this.commandBuffer[i];
+                    text += String.fromCharCode(this.commandBuffer[i]);
                 }
 
                 return new DisplayCharCommand(text, "normal");

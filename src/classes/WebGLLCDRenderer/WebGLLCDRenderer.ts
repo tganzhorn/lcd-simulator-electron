@@ -31,6 +31,7 @@ export class WebGLLCDRenderer {
         this.view = new Uint8ClampedArray(width * height);
         this.charBuffer = charBuffer;
 
+        console.log(charBuffer);
         this.texture = gl.createTexture();
 
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
@@ -87,11 +88,11 @@ export class WebGLLCDRenderer {
         this.commandsReceived++;
     }
 
-    insertTextAt(text: string, row: number, column: number) {
+    insertTextAt(text: string, row: number, column: number, mode: "normal" | "inverse" = "normal") {
         const rowIndex = row * 8 + 1;
         for (let i = 0; i < text.length; i++) {
             const columnIndex = (column + i) * 6 + 2;
-            this.setBlockData(this.charBuffer.chars[text[i]], rowIndex, columnIndex, this.charBuffer.charWidth, this.charBuffer.charHeight);
+            this.setBlockData(this.charBuffer.getChar(text.charAt(i)), rowIndex, columnIndex, this.charBuffer.charWidth, this.charBuffer.charHeight, mode);
         }
         this.cursorRow = row;
         this.cursorColumn = column + text.length;
@@ -102,20 +103,20 @@ export class WebGLLCDRenderer {
         this.commandsReceived++;
     }
 
-    setBlockData(block: Uint8ClampedArray, row: number, column: number, width: number, height: number, mode: "normal" | "invers" = "normal") {
+    setBlockData(block: Uint8ClampedArray, row: number, column: number, width: number, height: number, mode: "normal" | "inverse" = "normal") {
         let index = 0;
         for (let y = row; y < row + height; y++) {
             for (let x = column; x < column + width; x++) {
                 const i = x + y * this.width;
                 let color = block[index++];
-                if (mode === "invers") color = 255 - color;
+                if (mode === "inverse") color = 255 - color;
                 this.view[i] = color;
             }
         }
     }
 
-    insertText(text: string) {
-        this.insertTextAt(text, this.cursorRow, this.cursorColumn);
+    insertText(text: string, mode: "normal" | "inverse" = "normal") {
+        this.insertTextAt(text, this.cursorRow, this.cursorColumn, mode);
     }
 
     clearLines() {
@@ -158,10 +159,10 @@ export class WebGLLCDRenderer {
 
     executeCommand(command: LCDCommand): void {
         if (isDisplayCharCommand(command)) {
-            return this.insertText(command.text);
+            return this.insertText(command.text, command.mode ?? "normal");
         };
         if (isDisplayTextCommand(command)) {
-            return this.insertTextAt(command.text, command.row, command.column);
+            return this.insertTextAt(command.text, command.row, command.column, command.mode ?? "normal");
         };
         if (isDisplayClearRowCommand(command)) {
             return this.clearRow(command.row);
