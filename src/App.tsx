@@ -8,7 +8,7 @@ import {
   DebugTextCommand,
 } from './classes/CommandParser';
 import { DebugCommandView } from './components/DebugCommandView';
-import { PrimaryButton, PivotItem, Pivot, Text } from '@fluentui/react';
+import { PrimaryButton, PivotItem, Pivot, Text, AnimationStyles } from '@fluentui/react';
 import { DisplayCommandView } from './components/DisplayCommandView';
 import "./App.css";
 import "./Fonts.css";
@@ -16,6 +16,7 @@ import { useToasts } from 'react-toast-notifications';
 import { LCDView } from './components/LCDView';
 import { WebGLLCDRenderer } from './classes/WebGLLCDRenderer';
 import { Card } from './components/Card';
+import { Container } from './components/Container';
 
 function App() {
   const [serialPort, setSerialPort] = useState<SerialPort>();
@@ -78,9 +79,9 @@ function App() {
             }
           }
         } catch (error) {
-          reader.releaseLock();
-          writer.releaseLock();
           try {
+            reader.releaseLock();
+            writer.releaseLock();
             serialPort.close();
           } catch (e) { };
           setSerialPort(undefined);
@@ -89,7 +90,9 @@ function App() {
         }
       }
     } catch (error) {
-      serialPort.close();
+      try {
+        serialPort.close();
+      } catch (e) { };
       setSerialPort(undefined);
       setConnected(false);
       addToast("Could not establish a connection with the microcontroller.", { appearance: 'error', autoDismiss: true });
@@ -114,44 +117,30 @@ function App() {
   }
 
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      height: "100vh",
-      padding: 16,
-      boxSizing: "border-box",
-      overflowY: "auto",
-      overflowX: "hidden",
-      maxWidth: 800,
-      margin: "0 auto"
-    }}
-    >
-      {
-        connected ? (
-          <>
-            <LCDView ref={lcdRef} />
-            <Pivot style={{ marginTop: 8 }}>
-              <PivotItem headerText="Debug Infos">
-                <DebugCommandView clear={() => setDebugCommands(() => [])} clearAll={clearAll} commands={debugCommands} />
-              </PivotItem>
-              <PivotItem headerText="Display Commands">
-                <DisplayCommandView clear={() => commands.current.length = 0} clearAll={clearAll} commands={commands.current} />
-              </PivotItem>
-            </Pivot>
-          </>
-        ) : (
-          <Card style={{ padding: 8 }}>
-            <Text variant="medium" ><h1>No device connected!</h1></Text>
-            <Text variant="medium">
-              <p>
-                Please connect to a microcontroller by pressing the "Open COM Port" button.
-              </p>
-            </Text>
-            <PrimaryButton onClick={handleCOMPortSelection}>Open COM Port</PrimaryButton>
-          </Card>
-        )
-      }
-    </div>
+    <>
+      <Container style={{ position: "absolute", zIndex: connected ? -1 : 999 }} animationStyle={connected ? AnimationStyles.fadeOut400 : AnimationStyles.slideLeftIn400}>
+        <Card style={{ padding: 8 }}>
+          <Text variant="medium" ><h1>No device connected!</h1></Text>
+          <Text variant="medium">
+            <p>
+              Please connect to a microcontroller by pressing the "Open COM Port" button.
+            </p>
+          </Text>
+          <PrimaryButton onClick={handleCOMPortSelection}>Open COM Port</PrimaryButton>
+        </Card>
+      </Container>
+      <Container animationStyle={connected ? AnimationStyles.slideLeftIn400 : AnimationStyles.fadeOut400}>
+        <LCDView ref={lcdRef} />
+        <Pivot style={{ marginTop: 8 }}>
+          <PivotItem headerText="Debug Infos">
+            <DebugCommandView clear={() => setDebugCommands(() => [])} clearAll={clearAll} commands={debugCommands} />
+          </PivotItem>
+          <PivotItem headerText="Display Commands">
+            <DisplayCommandView clear={() => commands.current.length = 0} clearAll={clearAll} commands={commands.current} />
+          </PivotItem>
+        </Pivot>
+      </Container>
+    </>
   );
 }
 
