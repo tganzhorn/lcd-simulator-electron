@@ -12,11 +12,12 @@ import { PrimaryButton, PivotItem, Pivot, Text, AnimationStyles } from '@fluentu
 import { DisplayCommandView } from './components/DisplayCommandView';
 import "./App.css";
 import "./Fonts.css";
-import { useToasts } from 'react-toast-notifications';
+import toast from 'react-hot-toast';
 import { LCDView } from './components/LCDView';
 import { WebGLLCDRenderer } from './classes/WebGLLCDRenderer';
 import { Card } from './components/Card';
 import { Container } from './components/Container';
+import { Startup } from './components/Startup';
 
 function App() {
   const [serialPort, setSerialPort] = useState<SerialPort>();
@@ -24,8 +25,6 @@ function App() {
   const commands = useRef<LCDCommand[]>([]);
   const [connected, setConnected] = useState(false);
   const lcdRef = useRef<WebGLLCDRenderer | undefined>();
-
-  const { addToast } = useToasts();
 
   const readerRef = useRef<ReadableStreamDefaultReader<any>>();
   const writerRef = useRef<WritableStreamDefaultWriter<any>>();
@@ -35,9 +34,10 @@ function App() {
       const serialPort = await navigator.serial.requestPort();
       setConnected(true);
       setSerialPort(serialPort);
+      toast.success("Connected to microcontroller!");
     } catch (error) {
       setConnected(false);
-      addToast("No microcontroller found!", { appearance: 'warning', autoDismiss: true });
+      toast.error("No microcontroller found!");
     }
   }
 
@@ -86,7 +86,7 @@ function App() {
           } catch (e) { };
           setSerialPort(undefined);
           setConnected(false);
-          addToast("Lost connection to the microcontroller.", { appearance: 'error', autoDismiss: true });
+          toast.error("Lost connection to microcontroller!");
         }
       }
     } catch (error) {
@@ -95,9 +95,9 @@ function App() {
       } catch (e) { };
       setSerialPort(undefined);
       setConnected(false);
-      addToast("Could not establish a connection with the microcontroller.", { appearance: 'error', autoDismiss: true });
+      toast.error("Could not establish a connection with the microcontroller.");
     }
-  }, [addToast, debugCommands.length]);
+  }, [debugCommands.length]);
 
   useEffect(() => {
     if (!serialPort) return;
@@ -118,9 +118,10 @@ function App() {
 
   return (
     <>
+      <Startup />
       <Container style={{ position: "absolute", zIndex: connected ? -1 : 999 }} animationStyle={connected ? AnimationStyles.fadeOut400 : AnimationStyles.slideLeftIn400}>
-        <Card style={{ padding: 8 }}>
-          <Text variant="medium" ><h1>No device connected!</h1></Text>
+        <Text variant="xLarge"><h1>No device connected!</h1></Text>
+        <Card style={{ padding: 16 }}>
           <Text variant="medium">
             <p>
               Please connect to a microcontroller by pressing the "Open COM Port" button.

@@ -1,9 +1,10 @@
 import { LCDCharBuffer } from "./LCDCharBuffer";
 
+import toast from 'react-hot-toast';
 import { frag } from './frag';
 import { vert } from './vert';
 import { isDisplayCharCommand, isDisplayClearCommand, isDisplayTextCommand, LCDCommand } from "../CommandParser";
-import { isDisplayClearRowCommand, isDisplayPrintMulColumnCommand, isDisplaySetCursorCommand } from "../CommandParser/DisplayCommands";
+import { isDisplayClearRowCommand, isDisplayGraphicLine, isDisplayPrintColumnCommand, isDisplayPrintMulColumnCommand, isDisplaySetCursorCommand } from "../CommandParser/DisplayCommands";
 
 export class WebGLLCDRenderer {
     readonly gl: WebGL2RenderingContext;
@@ -31,7 +32,6 @@ export class WebGLLCDRenderer {
         this.view = new Uint8ClampedArray(width * height);
         this.charBuffer = charBuffer;
 
-        console.log(charBuffer);
         this.texture = gl.createTexture();
 
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
@@ -92,7 +92,7 @@ export class WebGLLCDRenderer {
         const rowIndex = row * 8 + 1;
         for (let i = 0; i < text.length; i++) {
             const columnIndex = (column + i) * 6 + 2;
-            this.setBlockData(this.charBuffer.getChar(text.charAt(i)), rowIndex, columnIndex, this.charBuffer.charWidth, this.charBuffer.charHeight, mode);
+            this.setBlockData(this.charBuffer.getChar(text.charAt(i)), rowIndex, columnIndex, this.charBuffer.charWidth, this.charBuffer.charHeight + 1, mode);
         }
         this.cursorRow = row;
         this.cursorColumn = column + text.length;
@@ -103,12 +103,18 @@ export class WebGLLCDRenderer {
         this.commandsReceived++;
     }
 
+    /**
+     * Each block consists of 6x8 pixels
+     */
     setBlockData(block: Uint8ClampedArray, row: number, column: number, width: number, height: number, mode: "normal" | "inverse" = "normal") {
         let index = 0;
-        for (let y = row; y < row + height; y++) {
-            for (let x = column; x < column + width; x++) {
+        for (let y = row; y < row + 8; y++) {
+            for (let x = column; x < column + 6; x++) {
+                let color = 0;
+                if (x < width + column && y < height + row) {
+                    color = block[index++] ?? 0;
+                }
                 const i = x + y * this.width;
-                let color = block[index++];
                 if (mode === "inverse") color = 255 - color;
                 this.view[i] = color;
             }
@@ -132,6 +138,12 @@ export class WebGLLCDRenderer {
 
     clearRow(row: number) {
         this.dirty = true;
+
+        for (let j = 0; j < 8; j++) {
+            for (let i = 0; i < this.width; i++) {
+                this.view[row * 8 + 1 + i + j * this.width] = 0;
+            }
+        }
 
         this.onReceiveCommand();
         this.commandsReceived++;
@@ -158,8 +170,18 @@ export class WebGLLCDRenderer {
     }
 
     executeCommand(command: LCDCommand): void {
+        const type = command.type;
         if (isDisplayCharCommand(command)) {
             return this.insertText(command.text, command.mode ?? "normal");
+        };
+        if (isDisplayPrintColumnCommand(command)) {
+            // NOT IMPLEMENTED
+        };
+        if (isDisplayPrintMulColumnCommand(command)) {
+            // NOT IMPLEMENTED
+        };
+        if (isDisplaySetCursorCommand(command)) {
+            return this.setCursor(command.row, command.column);
         };
         if (isDisplayTextCommand(command)) {
             return this.insertTextAt(command.text, command.row, command.column, command.mode ?? "normal");
@@ -167,15 +189,14 @@ export class WebGLLCDRenderer {
         if (isDisplayClearRowCommand(command)) {
             return this.clearRow(command.row);
         };
-        if (isDisplayPrintMulColumnCommand(command)) {
-            return;
-        };
-        if (isDisplaySetCursorCommand(command)) {
-            return this.setCursor(command.row, command.column);
+        if (isDisplayGraphicLine(command)) {
+            // NOT IMPLEMENTED
         };
         if (isDisplayClearCommand(command)) {
             return this.clearLines();
         };
+        
+        toast.error(type + " not implented in WebGLLCDRenderer!");
         console.log(command);
         return;
     }

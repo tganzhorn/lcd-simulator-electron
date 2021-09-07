@@ -1,7 +1,9 @@
 import { Card } from "./Card";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import { CommandBar, Text } from '@fluentui/react';
+import { CommandBar, ICommandBarItemProps, Text } from '@fluentui/react';
 import { WebGLLCDRenderer, font5x7, LCDCharBuffer } from "../classes/WebGLLCDRenderer";
+import { Tooltip } from "./Tooltip";
+import toast from 'react-hot-toast';
 
 export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -15,7 +17,10 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
 
         const gl = canvasRef.current.getContext("webgl2");
 
-        if (!gl) return;
+        if (!gl) {
+            toast.error("Congratulations! You are one of the lucky pals that can't use WebGL2, please talk to Mr. Reber!");
+            return;
+        }
 
         const charBuffer = new LCDCharBuffer(font5x7, 7, 5, 32);
 
@@ -34,9 +39,9 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
                 if (!lightRef.current) return;
                 lightRef.current.style.backgroundColor = "#aaa";
                 lightRef.current.style.boxShadow = "0 0 0 #aaa";
-            }, 300);
+            }, 100);
         }
-        
+
         renderer.onDraw = () => {
             if (!cmdRef.current) return;
 
@@ -51,10 +56,26 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
         }
     }, []);
 
+    const commandBarItems: ICommandBarItemProps[] = [
+        {
+            key: "reset",
+            text: "Reset LCD",
+            iconProps: {
+                iconName: "RevToggleKey"
+            },
+            onClick: () => {
+                if (lcdWebGLRenderer.current) {
+                    lcdWebGLRenderer.current.clearLines();
+                    lcdWebGLRenderer.current.commandsReceived = 0;
+                }
+            }
+        },
+    ];
+
     useImperativeHandle(ref, () => lcdWebGLRenderer.current);
 
     return (
-        <Card style={{ display: "flex", flexDirection: "column"}}>
+        <Card style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ position: "relative", backgroundColor: "#5DFF00" }} className="lcd">
                 <canvas
                     ref={canvasRef}
@@ -72,27 +93,18 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
                 </canvas>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingLeft: 8 }}>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                    <Text>RX:</Text>
-                    <div ref={lightRef} style={{ transition: "all 0.1s ease", marginLeft: 8, backgroundColor: "#aaa", borderRadius: "50%", width: 16, height: 16 }}></div>
-                </div>
-                <div>
-                    <Text style={{fontSize: 14}}>CMD: <span ref={cmdRef} style={{ fontFamily: "Roboto Mono", color: "lightblue" }}>0</span></Text>
-                </div>
-                <CommandBar items={[
-                    {
-                        key: "reset",
-                        text: "Reset",
-                        iconProps: {
-                            iconName: "RevToggleKey"
-                        },
-                        onClick: () => {
-                            if (lcdWebGLRenderer.current) {
-                                lcdWebGLRenderer.current.clearLines(); lcdWebGLRenderer.current.commandsReceived = 0
-                            }
-                        }
-                    }
-                ]} />
+                <Tooltip content="Flashes green on receiving commands.">
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                        <Text>RX:</Text>
+                        <div ref={lightRef} style={{ transition: "all ease 0.1s", marginLeft: 8, backgroundColor: "#aaa", borderRadius: "50%", width: 16, height: 16 }}></div>
+                    </div>
+                </Tooltip>
+                <Tooltip content="Shows the amount of received commands.">
+                    <div>
+                        <Text style={{ fontSize: 14 }}>CMD(s): <span ref={cmdRef} style={{ fontFamily: "Roboto Mono", color: "lightblue" }}>0</span></Text>
+                    </div>
+                </Tooltip>
+                <CommandBar items={commandBarItems} />
             </div>
         </Card>
     )

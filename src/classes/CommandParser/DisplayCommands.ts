@@ -24,17 +24,30 @@ export const isDisplayTextCommand = (command: LCDCommand): command is DisplayTex
 export class DisplayPrintMulColumnCommand extends LCDCommand {
     row: number;
     column: number;
-    text: string;
+    data: string;
 
-    constructor(text: string, row: number, column: number) {
-        super("DisplayPrintColumnCommand")
-        this.text = text;
+    constructor(data: string, row: number, column: number) {
+        super("DisplayPrintMulColumnCommand")
+        this.data = data;
         this.row = row;
         this.column = column;
     }
 }
 
 export const isDisplayPrintMulColumnCommand = (command: LCDCommand): command is DisplayPrintMulColumnCommand => {
+    return command.type === "DisplayPrintMulColumnCommand";
+}
+
+export class DisplayPrintColumnCommand extends LCDCommand {
+    data: string;
+
+    constructor(data: string) {
+        super("DisplayPrintColumnCommand")
+        this.data = data;
+    }
+}
+
+export const isDisplayPrintColumnCommand = (command: LCDCommand): command is DisplayPrintMulColumnCommand => {
     return command.type === "DisplayPrintColumnCommand";
 }
 
@@ -89,4 +102,20 @@ export class DisplayClearRowCommand extends LCDCommand {
 
 export const isDisplayClearRowCommand = (command: LCDCommand): command is DisplayClearRowCommand => {
     return command.type === "DisplayClearRowCommand";
+};
+
+export class DisplayGraphicLine extends LCDCommand {
+    colCount: number;
+    data: string;
+
+    constructor(colCount: number, data: string) {
+        super("DisplayGraphicLine");
+
+        this.colCount = colCount;
+        this.data = data;
+    };
+};
+
+export const isDisplayGraphicLine = (command: LCDCommand): command is DisplayGraphicLine => {
+    return command.type === "DisplayGraphicLine";
 };

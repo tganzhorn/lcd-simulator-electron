@@ -24,13 +24,13 @@ const printNumber = (number: number, mode: DebugNumberModes) => {
 }
 
 export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand | DebugNumberCommand)[], clear: () => void, clearAll: () => void }> = ({ commands, clear, clearAll }) => {
-    const [reverse, setReverse] = useState<boolean>(false);
+    const [reverse, setReverse] = useState<boolean>(true);
     const commandsCopy = reverse ? commands.slice().reverse() : commands.slice();
 
-    const commandBardItems: ICommandBarItemProps[] = [
+    const commandBarItems: ICommandBarItemProps[] = [
         {
             key: "clearDebug",
-            text: "Clear debug",
+            text: "Clear debug log",
             iconProps: {
                 iconName: "Clear"
             },
@@ -99,7 +99,7 @@ export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand |
 
     return (
         <Card>
-            <div style={{height: 200, overflowY: "scroll", resize: "vertical"}}>
+            <div style={{height: 210, overflowY: "scroll"}}>
                 <DetailsList
                     columns={columns}
                     items={commandsCopy}
@@ -107,7 +107,7 @@ export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand |
                     compact={true}
                 />
             </div>
-            <CommandBar items={commandBardItems} />
+            <CommandBar items={commandBarItems} />
         </Card>
     )
 }

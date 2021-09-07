@@ -10,4 +10,4 @@ export class LCDCommand {
 
 export type CommandTypes = "DisplaySetCursorCommand" | "DisplayTextCommand" | "DisplayCharCommand" |
     "DisplayClearCommand" | "DebugNumberCommand" | "DebugTextCommand" | "DisplayPrintColumnCommand" | 
-    "DisplayClearRowCommand";
+    "DisplayClearRowCommand" | "DisplayPrintMulColumnCommand" | "DisplayGraphicLine";

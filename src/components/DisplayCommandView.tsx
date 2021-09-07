@@ -6,28 +6,34 @@ import { printTime } from "../utils";
 import { Card } from "./Card";
 
 export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], clear: () => void, clearAll: () => void }> = ({ commands, clear, clearAll }) => {
-    const [reverse, setReverse] = useState<boolean>(false);
+    const [reverse, setReverse] = useState<boolean>(true);
     const [commandsCopy, setCommandsCopy] = useState<LCDCommand[]>([]);
 
     useEffect(() => {
-        setCommandsCopy(reverse ? commands.slice().reverse() : commands.slice());
-    }, [reverse, commands]);
+        const handle = window.setInterval(() => {
+            setCommandsCopy(() => reverse ? [...commands].reverse() : [...commands]);
+        }, 500);
+
+        return () => {
+            window.clearInterval(handle);
+        }
+    }, [commands, reverse]);
 
     useEffect(() => {
-        setCommandsCopy(reverse ? commands.slice().reverse() : commands.slice());
+        setCommandsCopy(() => reverse ? commands.slice().reverse() : commands.slice());
     }, [reverse, commands]);
 
     const commandBardItems: ICommandBarItemProps[] = [
         {
             key: "clearDisplay",
-            text: "Clear log",
+            text: "Clear display log",
             iconProps: {
                 iconName: "Clear"
             },
             onClick: () => {
                 clear();
                 commands.length = 0;
-                setCommandsCopy(reverse ? commands.slice().reverse() : commands.slice())
+                setCommandsCopy([...commands])
             }
         },
         {
@@ -39,16 +45,8 @@ export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], cle
             onClick: () => {
                 clearAll();
                 commands.length = 0;
-                setCommandsCopy(reverse ? commands.slice().reverse() : commands.slice())
+                setCommandsCopy([...commands])
             }
-        },
-        {
-            key: "sync",
-            text: "Sync",
-            iconProps: {
-                iconName: "Sync"
-            },
-            onClick: () => setCommandsCopy(commands.slice())
         }
     ];
 
@@ -87,7 +85,7 @@ export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], cle
 
     return (
         <Card>
-            <div style={{height: 200, overflowY: "scroll", resize: "vertical"}}>
+            <div style={{height: 210, overflowY: "scroll"}}>
                 <DetailsList
                     columns={columns}
                     items={commandsCopy}

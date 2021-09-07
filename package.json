@@ -1,6 +1,6 @@
 {
   "name": "lcd-simulator-electron",
-  "version": "v0.2.4-alpha",
+  "version": "v1.0.0-rc1",
   "private": true,
   "author": "Tobias Ganzhorn",
   "description": "Simple LCD-Simulator for the Mikrocontroller-Labor-Board.",
@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@fluentui/react": "^8.18.0",
+    "@fluentui/react-hooks": "^8.3.2",
     "@types/node": "^14.17.3",
     "@types/react": "^17.0.9",
     "@types/react-dom": "^17.0.6",
@@ -46,9 +47,8 @@
     "electronmon": "^1.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-hot-toast": "^2.1.1",
     "react-scripts": "4.0.3",
-    "react-toast-notifications": "^2.4.4",
-    "react-windows-ui": "^2.0.7",
     "typescript": "^4.3.2",
     "wait-on": "^5.3.0"
   },

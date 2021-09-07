@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog } = require("electron");
+const { app, BrowserWindow } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 
@@ -18,6 +18,8 @@ function createWindow() {
     width: 490,
     height: 640,
     resizable: false,
+    fullscreenable: false,
+    maximizable: false,
     icon: __dirname + '/favicon.ico',
     webPreferences: {
       contextIsolation: true,
