@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, shell } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 
@@ -41,6 +41,11 @@ function createWindow() {
     } else {
       callback(selectedPort.portId);
     }
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(({url}) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
   })
 
   // Load from localhost if in development

@@ -85,7 +85,7 @@ export class CommandParser {
             let text: string,
                 row: number,
                 column: number,
-                data: string,
+                columnData: number[] = [],
                 mode: DisplayCommandModes;
             switch (this.commandBuffer[1]) {
                 case DISPLAY_COMMAND.GLCD_DISPLAYCHARS:
@@ -94,34 +94,33 @@ export class CommandParser {
                         text += String.fromCharCode(this.commandBuffer[i]);
                     }
 
-                    return new DisplayCharCommand(text, "normal");
+                    return new DisplayCharCommand(text, "normal", "DisplayChars");
                 case DISPLAY_COMMAND.GLCD_SETTEXTCURSOR:
                     row = this.commandBuffer[3];
                     column = this.commandBuffer[4];
 
-                    return new DisplaySetCursorCommand(row, column);
+                    return new DisplaySetCursorCommand(row, column, "SetTextCursor");
                 case DISPLAY_COMMAND.GLCD_SETROW:
                     row = this.commandBuffer[3];
 
-                    return new DisplaySetCursorCommand(row, null);
+                    return new DisplaySetCursorCommand(row, null, "SetRow");
                 case DISPLAY_COMMAND.GLCD_SETCOLUMN:
                     column = this.commandBuffer[3];
 
-                    return new DisplaySetCursorCommand(null, column);
+                    return new DisplaySetCursorCommand(null, column, "SetColumn");
                 case DISPLAY_COMMAND.GLCD_PRINTCOLUMN:
-                    data = String.fromCharCode(this.commandBuffer[3]);
+                    columnData.push(this.commandBuffer[3]);
 
-                    return new DisplayPrintColumnCommand(data);
+                    return new DisplayPrintColumnCommand(columnData, "PrintColumn");
                 case DISPLAY_COMMAND.GLCD_PRINTMULCOLUMN:
                     row = this.commandBuffer[3];
                     column = this.commandBuffer[4];
 
-                    data = "";
                     for (let i = 5; i < this.commandBuffer.length; i++) {
-                        data += String.fromCharCode(this.commandBuffer[i]);
+                        columnData.push(this.commandBuffer[i]);
                     }
 
-                    return new DisplayPrintMulColumnCommand(data, row, column);
+                    return new DisplayPrintMulColumnCommand(columnData, row, column, "PrintMulColumn");
                 case DISPLAY_COMMAND.GLCD_PRINTTEXT: case DISPLAY_COMMAND.GLCD_PRINTTEXTINVERS:
                     mode = this.commandBuffer[1] === DISPLAY_COMMAND.GLCD_PRINTTEXT ? "normal" : "inverse";
                     row = this.commandBuffer[3];
@@ -132,19 +131,19 @@ export class CommandParser {
                         text += String.fromCharCode(this.commandBuffer[i]);
                     }
 
-                    return new DisplayTextCommand(text, row, column, mode);
+                    return new DisplayTextCommand(text, row, column, mode, "PrintText" + (mode === "normal" ? "" : " (inverse)"));
                 case DISPLAY_COMMAND.GLCD_PRINTCHAR: case DISPLAY_COMMAND.GLCD_PRINTCHARINVERS:
                     mode = this.commandBuffer[1] === DISPLAY_COMMAND.GLCD_PRINTCHAR ? "normal" : "inverse";
                     text = String.fromCharCode(this.commandBuffer[3]);
 
-                    return new DisplayCharCommand(text, mode);
+                    return new DisplayCharCommand(text, mode, "PrintChar" + (mode === "normal" ? "" : " (inverse)"));
                 case DISPLAY_COMMAND.GLCD_PRINTGRAFIKLINE: // NOT IMPLEMENTED
-                    return new DisplayGraphicLine(0, "");
+                    return new DisplayGraphicLine(0, [], "PrintGrafikLine");
                 case DISPLAY_COMMAND.GLCD_CLEARROW:
                     row = this.commandBuffer[3];
-                    return new DisplayClearRowCommand(row);
+                    return new DisplayClearRowCommand(row, "ClearRow");
                 case DISPLAY_COMMAND.GLCD_CLEARLCD:
-                    return new DisplayClearCommand();
+                    return new DisplayClearCommand("ClearLCD");
                 default:
                     toast.error("Received command not recognized! (For more info check developer console)"); // DEBUG
                     console.log(this.commandBuffer);

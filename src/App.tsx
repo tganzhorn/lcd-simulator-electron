@@ -2,13 +2,13 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   CommandParser,
   LCDCommand,
-  isDebugNumberCommand,
-  isDebugTextCommand,
-  DebugNumberCommand,
-  DebugTextCommand,
+  isDisplayCommand,
+  isDebugCommand,
+  DebugCommand,
+  DisplayCommand,
 } from './classes/CommandParser';
 import { DebugCommandView } from './components/DebugCommandView';
-import { PrimaryButton, PivotItem, Pivot, Text, AnimationStyles } from '@fluentui/react';
+import { PrimaryButton, PivotItem, Pivot, Text, AnimationStyles, Icon } from '@fluentui/react';
 import { DisplayCommandView } from './components/DisplayCommandView';
 import "./App.css";
 import "./Fonts.css";
@@ -21,15 +21,15 @@ import { Startup } from './components/Startup';
 
 function App() {
   const [serialPort, setSerialPort] = useState<SerialPort>();
-  const [debugCommands, setDebugCommands] = useState<(DebugNumberCommand | DebugTextCommand)[]>([]);
-  const commands = useRef<LCDCommand[]>([]);
+  const [debugCommands, setDebugCommands] = useState<DebugCommand[]>([]);
+  const commands = useRef<DisplayCommand[]>([]);
   const [connected, setConnected] = useState(false);
   const lcdRef = useRef<WebGLLCDRenderer | undefined>();
 
   const readerRef = useRef<ReadableStreamDefaultReader<any>>();
   const writerRef = useRef<WritableStreamDefaultWriter<any>>();
 
-  const handleCOMPortSelection = async () => {
+  const handleCOMPortSelection = useCallback(async () => {
     try {
       const serialPort = await navigator.serial.requestPort();
       setConnected(true);
@@ -39,15 +39,15 @@ function App() {
       setConnected(false);
       toast.error("No microcontroller found!");
     }
-  }
+  }, []);
 
   const openSerialPort = useCallback(async (serialPort: SerialPort) => {
     try {
       await serialPort.open({ baudRate: 460800, parity: "none", stopBits: 1, dataBits: 8, flowControl: "none" });
       while (serialPort.readable && serialPort.writable) {
         const commandParser = new CommandParser();
-        const reader = await serialPort.readable.getReader();
-        const writer = await serialPort.writable.getWriter();
+        const reader = serialPort.readable.getReader();
+        const writer = serialPort.writable.getWriter();
 
         readerRef.current = reader;
         writerRef.current = writer;
@@ -55,15 +55,16 @@ function App() {
         commandParser.onNewCommand = (command: LCDCommand) => {
           if (!lcdRef.current) return;
           const lcdManager = lcdRef.current;
-          if (isDebugNumberCommand(command) || isDebugTextCommand(command)) {
-            if (debugCommands.length < 200) setDebugCommands(state => state.concat([command]));
-          } else {
+          if (isDebugCommand(command)) {
+            setDebugCommands(state => state.concat([command]));
+          }
+          if (isDisplayCommand(command)) {
             commands.current.push(command);
             lcdManager.executeCommand(command);
           }
         };
 
-        const ack = new Uint8Array([7]);
+        const acknowledge = new Uint8Array([7]);
 
         try {
           while (true) {
@@ -74,7 +75,7 @@ function App() {
               break;
             }
             if (value) {
-              writer.write(ack);
+              writer.write(acknowledge);
               commandParser.parseValue(value);
             }
           }
@@ -83,7 +84,7 @@ function App() {
             reader.releaseLock();
             writer.releaseLock();
             serialPort.close();
-          } catch (e) { };
+          } catch (error) { };
           setSerialPort(undefined);
           setConnected(false);
           toast.error("Lost connection to microcontroller!");
@@ -92,12 +93,12 @@ function App() {
     } catch (error) {
       try {
         serialPort.close();
-      } catch (e) { };
+      } catch (error) { };
       setSerialPort(undefined);
       setConnected(false);
       toast.error("Could not establish a connection with the microcontroller.");
     }
-  }, [debugCommands.length]);
+  }, []);
 
   useEffect(() => {
     if (!serialPort) return;
@@ -107,14 +108,20 @@ function App() {
     return () => { }
   }, [serialPort, openSerialPort]);
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     if (!lcdRef.current) return;
     const lcdManager = lcdRef.current;
     commands.current.length = 0;
     setDebugCommands(() => []);
     lcdManager.clearLines();
     lcdManager.commandsReceived = 0;
-  }
+  }, []);
+
+  const handleHistory = useCallback((command: DisplayCommand | undefined) => {
+    if(!lcdRef.current) return;
+    if (command === undefined) return lcdRef.current.hideHistory();
+    lcdRef.current.showHistory(command);
+  }, []);
 
   return (
     <>
@@ -129,15 +136,23 @@ function App() {
           </Text>
           <PrimaryButton onClick={handleCOMPortSelection}>Open COM Port</PrimaryButton>
         </Card>
+        <Card style={{ padding: 16, marginTop: "auto", display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <Icon iconName="Help" style={{padding: 8, marginRight: 16, color: "white", backgroundColor: "rgb(16, 110, 190)", borderRadius: "50%"}} />
+          <Text variant="medium">
+            <p>
+              If you can't connect to the microcontroller at all you probably have to install the FTDI drivers which you can find by clicking this <a target="_blank" rel="noreferrer" href="https://ftdichip.com/drivers/">link</a>.
+            </p>
+          </Text>
+        </Card>
       </Container>
       <Container animationStyle={connected ? AnimationStyles.slideLeftIn400 : AnimationStyles.fadeOut400}>
-        <LCDView ref={lcdRef} />
+        <LCDView ref={lcdRef} reset={clearAll} />
         <Pivot style={{ marginTop: 8 }}>
           <PivotItem headerText="Debug Infos">
-            <DebugCommandView clear={() => setDebugCommands(() => [])} clearAll={clearAll} commands={debugCommands} />
+            <DebugCommandView commands={debugCommands} />
           </PivotItem>
-          <PivotItem headerText="Display Commands">
-            <DisplayCommandView clear={() => commands.current.length = 0} clearAll={clearAll} commands={commands.current} />
+          <PivotItem headerText="Display Command History">
+            <DisplayCommandView showHistory={handleHistory} commands={commands.current} />
           </PivotItem>
         </Pivot>
       </Container>

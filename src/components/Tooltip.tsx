@@ -12,7 +12,6 @@ export const Tooltip: FC<{content?: ITooltipHostProps["content"]}> = ({ children
             calloutProps={{
                 gapSpace: 0
             }}
-            styles={{}}
         >
             {children}
         </TooltipHost>

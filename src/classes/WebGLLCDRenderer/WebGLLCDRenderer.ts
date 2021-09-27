@@ -3,12 +3,13 @@ import { LCDCharBuffer } from "./LCDCharBuffer";
 import toast from 'react-hot-toast';
 import { frag } from './frag';
 import { vert } from './vert';
-import { isDisplayCharCommand, isDisplayClearCommand, isDisplayTextCommand, LCDCommand } from "../CommandParser";
+import { isDisplayCharCommand, isDisplayClearCommand, isDisplayTextCommand, DisplayCommand } from "../CommandParser";
 import { isDisplayClearRowCommand, isDisplayGraphicLine, isDisplayPrintColumnCommand, isDisplayPrintMulColumnCommand, isDisplaySetCursorCommand } from "../CommandParser/DisplayCommands";
 
 export class WebGLLCDRenderer {
     readonly gl: WebGL2RenderingContext;
     readonly view: Uint8ClampedArray;
+    readonly viewBuffer: Uint8ClampedArray;
     readonly texture: WebGLTexture | null;
     readonly width: number;
     readonly height: number;
@@ -22,14 +23,18 @@ export class WebGLLCDRenderer {
     dirty: boolean = false;
     raf: number = -1;
     commandsReceived: number = 0;
-    onReceiveCommand: () => void = () => { };
+    showingHistory: boolean = false;
+    onReceiveCommand: (command: DisplayCommand) => void = () => { };
     onDraw: () => void = () => {};
 
     constructor(gl: WebGL2RenderingContext, width: number, height: number, charBuffer: LCDCharBuffer) {
         this.gl = gl;
         this.width = width;
         this.height = height;
-        this.view = new Uint8ClampedArray(width * height);
+
+        this.view = new Uint8ClampedArray(this.width * this.height);
+        this.viewBuffer = new Uint8ClampedArray(this.width * this.height);
+
         this.charBuffer = charBuffer;
 
         this.texture = gl.createTexture();
@@ -78,13 +83,14 @@ export class WebGLLCDRenderer {
 
         this.vertexBuffer = vertexBuffer;
         this.shaderProgram = shaderProgram;
+        
+        this.dirty = true;
     }
 
     setCursor(row: number | null, column: number | null) {
         this.cursorRow = row ?? this.cursorRow;
         this.cursorColumn = column ?? this.cursorColumn;
 
-        this.onReceiveCommand();
         this.commandsReceived++;
     }
 
@@ -99,7 +105,6 @@ export class WebGLLCDRenderer {
 
         this.dirty = true;
 
-        this.onReceiveCommand();
         this.commandsReceived++;
     }
 
@@ -109,44 +114,75 @@ export class WebGLLCDRenderer {
     setBlockData(block: Uint8ClampedArray, row: number, column: number, width: number, height: number, mode: "normal" | "inverse" = "normal") {
         let index = 0;
         for (let y = row; y < row + 8; y++) {
+            if (y > this.height) break;
             for (let x = column; x < column + 6; x++) {
+                if (x > this.width) continue;
                 let color = 0;
                 if (x < width + column && y < height + row) {
                     color = block[index++] ?? 0;
                 }
                 const i = x + y * this.width;
                 if (mode === "inverse") color = 255 - color;
-                this.view[i] = color;
+                this.viewBuffer[i] = color;
             }
         }
+    }
+
+    setColumnData(column: number[]) {
+        let index = 0;
+        for (let x = 0; x < column.length; x++) {
+            for (let y = this.cursorRow * 8; y < this.cursorRow * 8 + 8; y++) {
+                if (y > this.height) break;
+                this.viewBuffer[this.cursorColumn * 6 + (y + x * 8) * this.width] = ((column[x] >> index++) & 0x01) * 255; 
+            }
+            index = 0;
+        }
+        
+        this.dirty = true;
     }
 
     insertText(text: string, mode: "normal" | "inverse" = "normal") {
         this.insertTextAt(text, this.cursorRow, this.cursorColumn, mode);
     }
 
-    clearLines() {
+    clearLines(buffer: Uint8ClampedArray = new Uint8ClampedArray(this.width * this.height)) {
         for (let i = 0; i < this.view.length; i++) {
-            this.view[i] = 0;
-        }
+            this.viewBuffer[i] = buffer[i];
+        };
 
         this.dirty = true;
 
-        this.onReceiveCommand();
         this.commandsReceived++;
     }
 
     clearRow(row: number) {
         this.dirty = true;
 
-        for (let j = 0; j < 8; j++) {
+        for (let j = 1; j < 9; j++) {
             for (let i = 0; i < this.width; i++) {
-                this.view[row * 8 + 1 + i + j * this.width] = 0;
+                this.viewBuffer[row * 8 + i + j * this.width] = 0;
             }
         }
 
-        this.onReceiveCommand();
         this.commandsReceived++;
+    }
+
+    showHistory(command: DisplayCommand) {
+        this.showingHistory = true;
+
+        for (let i = 0; i < this.view.length; i++) {
+            this.view[i] = command.view[i];
+        }
+
+        this.cursorRow = command.cursorRow;
+        this.cursorColumn = command.cursorColumn;
+
+        this.dirty = true;
+    }
+
+    hideHistory() {
+        this.showingHistory = false;
+        this.dirty = true;
     }
 
     startTicker() {
@@ -161,6 +197,13 @@ export class WebGLLCDRenderer {
 
     draw() {
         if (!this.dirty) return;
+
+        if (!this.showingHistory) {
+            for (let i = 0; i < this.view.length; i++) {
+                this.view[i] = this.viewBuffer[i];
+            }
+        }
+        
         const gl = this.gl;
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, this.width, this.height, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, this.view);
         gl.generateMipmap(gl.TEXTURE_2D);
@@ -169,36 +212,55 @@ export class WebGLLCDRenderer {
         this.dirty = false;
     }
 
-    executeCommand(command: LCDCommand): void {
+    executeCommand(command: DisplayCommand): void {
         const type = command.type;
         if (isDisplayCharCommand(command)) {
-            return this.insertText(command.text, command.mode ?? "normal");
+            this.insertText(command.text, command.mode ?? "normal");
         };
         if (isDisplayPrintColumnCommand(command)) {
-            // NOT IMPLEMENTED
+            this.setColumnData(command.data);
         };
         if (isDisplayPrintMulColumnCommand(command)) {
-            // NOT IMPLEMENTED
+            this.setColumnData(command.data);
         };
         if (isDisplaySetCursorCommand(command)) {
-            return this.setCursor(command.row, command.column);
+            this.setCursor(command.row, command.column);
         };
         if (isDisplayTextCommand(command)) {
-            return this.insertTextAt(command.text, command.row, command.column, command.mode ?? "normal");
+            this.insertTextAt(command.text, command.row, command.column, command.mode ?? "normal");
         };
         if (isDisplayClearRowCommand(command)) {
-            return this.clearRow(command.row);
+            this.clearRow(command.row);
         };
         if (isDisplayGraphicLine(command)) {
             // NOT IMPLEMENTED
+            toast.error(type + " not implented in WebGLLCDRenderer!");
         };
         if (isDisplayClearCommand(command)) {
-            return this.clearLines();
+            this.clearLines();
         };
-        
-        toast.error(type + " not implented in WebGLLCDRenderer!");
-        console.log(command);
+
+        command.cursorColumn = this.cursorColumn;
+        command.cursorRow = this.cursorRow;
+        command.view = new Uint8ClampedArray(this.viewBuffer);
+
+        this.onReceiveCommand(command);
+
         return;
+    }
+
+    reset() {
+        for(let i = 0; i < this.view.length; i++) {
+            this.view[i] = 0;
+            this.viewBuffer[i] = 0;
+        }
+
+        this.cursorColumn = 0;
+        this.cursorRow = 0;
+        this.commandsReceived = 0;
+        this.showingHistory = false;
+
+        this.dirty = true;
     }
 
     destroy() {
