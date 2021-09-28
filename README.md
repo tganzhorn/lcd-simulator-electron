@@ -1,11 +1,13 @@
 <img alt="Logo" height="60" src="https://github.com/tganzhorn/lcd-simulator-electron/raw/master/public/ms-icon-310x310.png" align="right" title="LCD-Simulator" />
 
 # LCD-Simulator
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [<img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/tganzhorn/lcd-simulator-electron">](https://github.com/tganzhorn/lcd-simulator-electron/releases/latest)
 [<img alt="GitHub release (latest by date)" src="https://img.shields.io/github/downloads/tganzhorn/lcd-simulator-electron/latest/total">](https://github.com/tganzhorn/lcd-simulator-electron/releases/latest)
 [<img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/tganzhorn/lcd-simulator-electron">](https://github.com/tganzhorn/lcd-simulator-electron/issues)
+[<img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/tganzhorn/lcd-simulator-electron">](#)
+[<img alt="GitHub License" src="https://img.shields.io/github/license/tganzhorn/lcd-simulator-electron">](#)
 
+***
 
 ## Table of content
 - [About](#about)
@@ -19,7 +21,7 @@
 - [Supported commands](#supported-commands) 
 	- [Display commands](#display-commands)
 	- [Debug commands](#debug-commands)
-
+***
 ## About
 This project is a simple LCD Simulator for the Mikrocontroller-Labor-Board ([HS-Pforzheim](https://www.hs-pforzheim.de/)). We only support Windows 7+, due to end of life issues.
 
@@ -30,6 +32,7 @@ This project is a simple LCD Simulator for the Mikrocontroller-Labor-Board ([HS-
 
 
 Build with [electron](https://www.electronjs.org/), [react](https://reactjs.org/) and [typescript](https://www.typescriptlang.org/).
+***
 ## Development
 ### IDE
 ![Visual Studio Code](https://img.shields.io/badge/Visual%20Studio%20Code-0078d7.svg?style=for-the-badge&logo=visual-studio-code&logoColor=white)
@@ -59,7 +62,7 @@ Finally you can build and bundle the application into a setup executable, which 
 ### Add display commands
 
 This paragraph is currently a stub, maybe the author wants to write something here!
-
+***
 ## Supported commands
 A question mark after an unticked command means that we can receive the command and process it, the implementation is just not quite right yet.
 ### Display commands
