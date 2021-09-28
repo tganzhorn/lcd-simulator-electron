@@ -1,58 +1,77 @@
-# Getting Started with CRA Electron Builder TypeScript
+<img alt="Logo" height="60" src="https://github.com/tganzhorn/lcd-simulator-electron/raw/master/public/ms-icon-310x310.png" align="right" title="LCD-Simulator" />
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) using the [electron-builder-typescript](https://www.npmjs.com/package/cra-template-electron-builder-typescript) template.
+# LCD-Simulator
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[<img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/tganzhorn/lcd-simulator-electron">](https://github.com/tganzhorn/lcd-simulator-electron/releases/latest)
+[<img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/tganzhorn/lcd-simulator-electron">](https://github.com/tganzhorn/lcd-simulator-electron/issues)
 
-## Available Scripts
+## Table of content
+- [About](#about)
+- [Development](#development)
+	- [IDE](#ide)
+	- [Environment](#environment)
+		- [Install dependencies](#install-dependencies)
+		- [Start development Server](#start-development-server)
+		- [Bundle Application](#bundle-application)
+	- [Add display commands](#add-display-commands)
+- [Supported commands](#supported-commands) 
+	- [Display commands](#display-commands)
+	- [Debug commands](#debug-commands)
 
-In the project directory, you can run:
+## About
+This project is a simple LCD Simulator for the Mikrocontroller-Labor-Board ([HS-Pforzheim](https://www.hs-pforzheim.de/)). We only support Windows 7+, due to end of life issues.
 
-### `npm start`
+![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![Electron.js](https://img.shields.io/badge/Electron-191970?style=for-the-badge&logo=Electron&logoColor=white)
 
-Runs the app in the development mode within a local ElectronJS window.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Build with [electron](https://www.electronjs.org/), [react](https://reactjs.org/) and [typescript](https://www.typescriptlang.org/).
+## Development
+### IDE
+![Visual Studio Code](https://img.shields.io/badge/Visual%20Studio%20Code-0078d7.svg?style=for-the-badge&logo=visual-studio-code&logoColor=white)
 
-### `npm run dist:win`
+For the best development experience please use [Visual Studio Code](https://code.visualstudio.com/). 
+### Environment
+![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
 
-Package and build a ready for distribution application for Windows. This template uses [electron-builder](https://www.electron.build/) for packaging and by default outputs a NSIS installer for Windows.
+In order to start developing you need to install the latest LTS version of [NodeJS](https://nodejs.org/en/) >= 14.17.6.
 
-_Remember to change the author, description, build.appId and build.productName in `package.json` before creating a distributable_
+Be aware that all commands in the following chapters need to be called from some commandline (PowerShell, CMD), at the root of the project folder.
 
-### `npm run dist:mac`
+#### Install dependencies
+To install all the needed dependencies just call the following command:
 
-Package and build a ready for distribution application for macOS. This template uses [electron-builder](https://www.electron.build/) for packaging and by default outputs a dmg installer for macOS.
+`npm install`
 
-_Remember to change the author, description, build.appId and build.productName in `package.json` before creating a distributable_
+You only have to call this command after the initial clone.
+#### Start development server
+Calling the following command runs a new React development server plus the electron development server concurrently.
 
-### `npm run dist:linux`
+`npm run start`
+#### Bundle application
+Finally you can build and bundle the application into a setup executable, which can be installed on any Windows 7+ device, by running the following command.
 
-Package and build a ready for distribution application for Linux. This template uses [electron-builder](https://www.electron.build/) for packaging and by default outputs a deb installer for Linux.
+`npm run bundle`
+### Add display commands
 
-_Remember to change the author, description, build.appId and build.productName in `package.json` before creating a distributable_
+This paragraph is currently a stub, maybe the author wants to write something here!
 
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Supported commands
+A question mark after an unticked command means that we can receive the command and process it, the implementation is just not quite right yet.
+### Display commands
+- [x] GLCD_DisplayChars
+- [x] GLCD_SetTextCursor
+- [ ] GLCD_SetRow (?)
+- [ ] GLCD_SetColumn (?)
+- [x] GLCD_PrintColumn
+- [x] GLCD_PrintMulColumn
+- [x] GLCD_PrintText
+- [x] GLCD_PrintChar
+- [ ] GLCD_PrintGrafikLine
+- [x] GLCD_ClearRow
+- [x] GLCD_ClearLCD
+### Debug commands
+- [x] Printing uint(8/16/32) to hexadecimal, decimal and binary.
+- [x] Printing status messages (error, ok, etc.)
