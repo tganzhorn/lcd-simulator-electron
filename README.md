@@ -3,7 +3,9 @@
 # LCD-Simulator
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [<img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/tganzhorn/lcd-simulator-electron">](https://github.com/tganzhorn/lcd-simulator-electron/releases/latest)
+[<img alt="GitHub release (latest by date)" src="https://img.shields.io/github/downloads/tganzhorn/lcd-simulator-electron/latest/total">](https://github.com/tganzhorn/lcd-simulator-electron/releases/latest)
 [<img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/tganzhorn/lcd-simulator-electron">](https://github.com/tganzhorn/lcd-simulator-electron/issues)
+
 
 ## Table of content
 - [About](#about)
