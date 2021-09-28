@@ -4,6 +4,12 @@ export const Startup: FC<{}> = () => {
     const [open, setOpen] = useState(true);
     const [transition, setTransition] = useState(true);
     useEffect(() => {
+        if (process.env.NODE_ENV === "development") {
+            setOpen(false);
+
+            return () => {};
+        }
+        
         const handle = window.setTimeout(() => {
             setTransition(false);
         }, 2000);

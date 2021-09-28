@@ -1,7 +1,3 @@
-export const printTime = (timestamp: Date) => {
-    return timestamp.toLocaleTimeString() + ":" + fillZeroes("" + timestamp.getMilliseconds(), 3);
-}
-
 export const fillZeroes = (string: string, length: number) => {
     if (string.length === length) return string;
 

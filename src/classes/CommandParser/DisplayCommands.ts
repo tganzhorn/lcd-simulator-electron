@@ -1,15 +1,29 @@
+import { fillZeroes } from "../../utils";
 import { LCDCommand } from "./LCDCommand";
+
+export abstract class DisplayCommand extends LCDCommand {
+    abstract print: () => string;
+    view: Uint8ClampedArray = new Uint8ClampedArray();
+    cursorRow: number = 0;
+    cursorColumn: number = 0;
+}
+
+export const isDisplayCommand = (command: LCDCommand): command is DisplayCommand => {
+    return (command as DisplayCommand).cursorColumn !== undefined;
+}
 
 export type DisplayCommandModes = "normal" | "inverse";
 
-export class DisplayTextCommand extends LCDCommand {
+export class DisplayTextCommand extends DisplayCommand {
     mode: DisplayCommandModes;
     row: number;
     column: number;
     text: string;
 
-    constructor(text: string, row: number, column: number, mode: DisplayCommandModes) {
-        super("DisplayTextCommand");
+    print = () => `text: ${this.text}\nposition: (${this.row}, ${this.column})`;
+
+    constructor(text: string, row: number, column: number, mode: DisplayCommandModes, initialCommand: string) {
+        super("DisplayTextCommand", initialCommand);
         this.text = text;
         this.row = row;
         this.column = column;
@@ -21,13 +35,15 @@ export const isDisplayTextCommand = (command: LCDCommand): command is DisplayTex
     return command.type === "DisplayTextCommand";
 }
 
-export class DisplayPrintMulColumnCommand extends LCDCommand {
+export class DisplayPrintMulColumnCommand extends DisplayCommand {
     row: number;
     column: number;
-    data: string;
+    data: number[];
 
-    constructor(data: string, row: number, column: number) {
-        super("DisplayPrintMulColumnCommand")
+    print = () => `data: [${this.data.map(d => fillZeroes(d.toString(16), 2)).join(", ")}]`;
+
+    constructor(data: number[], row: number, column: number, initialCommand: string) {
+        super("DisplayPrintMulColumnCommand", initialCommand)
         this.data = data;
         this.row = row;
         this.column = column;
@@ -38,11 +54,13 @@ export const isDisplayPrintMulColumnCommand = (command: LCDCommand): command is 
     return command.type === "DisplayPrintMulColumnCommand";
 }
 
-export class DisplayPrintColumnCommand extends LCDCommand {
-    data: string;
+export class DisplayPrintColumnCommand extends DisplayCommand {
+    data: number[];
 
-    constructor(data: string) {
-        super("DisplayPrintColumnCommand")
+    print = () => `data: [${this.data.map(d => fillZeroes(d.toString(16), 2)).join(", ")}]`;
+
+    constructor(data: number[], initialCommand: string) {
+        super("DisplayPrintColumnCommand", initialCommand)
         this.data = data;
     }
 }
@@ -51,12 +69,14 @@ export const isDisplayPrintColumnCommand = (command: LCDCommand): command is Dis
     return command.type === "DisplayPrintColumnCommand";
 }
 
-export class DisplaySetCursorCommand extends LCDCommand {
+export class DisplaySetCursorCommand extends DisplayCommand {
     row: number | null;
     column: number | null;
 
-    constructor(row: number | null, column: number | null) {
-        super("DisplaySetCursorCommand");
+    print = () => `position: (${this.row ?? "inherit"}, ${this.column ?? "inherit"})`;
+
+    constructor(row: number | null, column: number | null, initialCommand: string) {
+        super("DisplaySetCursorCommand", initialCommand);
         this.row = row;
         this.column = column;
     }
@@ -66,9 +86,11 @@ export const isDisplaySetCursorCommand = (command: LCDCommand): command is Displ
     return command.type === "DisplaySetCursorCommand";
 }
 
-export class DisplayClearCommand extends LCDCommand {
-    constructor() {
-        super("DisplayClearCommand");
+export class DisplayClearCommand extends DisplayCommand {
+    print = () => "clear all";
+
+    constructor(initialCommand: string) {
+        super("DisplayClearCommand", initialCommand);
     }
 }
 
@@ -76,12 +98,14 @@ export const isDisplayClearCommand = (command: LCDCommand): command is DisplayCl
     return command.type === "DisplayClearCommand";
 }
 
-export class DisplayCharCommand extends LCDCommand {
+export class DisplayCharCommand extends DisplayCommand {
     mode: DisplayCommandModes;
     text: string;
 
-    constructor(text: string, mode: DisplayCommandModes) {
-        super("DisplayCharCommand");
+    print = () => `text: ${this.text}`;
+
+    constructor(text: string, mode: DisplayCommandModes, initialCommand: string) {
+        super("DisplayCharCommand", initialCommand);
         this.text = text;
         this.mode = mode;
     }
@@ -91,11 +115,13 @@ export const isDisplayCharCommand = (command: LCDCommand): command is DisplayCha
     return command.type === "DisplayCharCommand";
 }
 
-export class DisplayClearRowCommand extends LCDCommand {
+export class DisplayClearRowCommand extends DisplayCommand {
     row: number;
 
-    constructor(row: number) {
-        super("DisplayClearRowCommand");
+    print = () => `cleared row: ${this.row}`;
+
+    constructor(row: number, initialCommand: string) {
+        super("DisplayClearRowCommand", initialCommand);
         this.row = row;
     }
 }
@@ -104,12 +130,14 @@ export const isDisplayClearRowCommand = (command: LCDCommand): command is Displa
     return command.type === "DisplayClearRowCommand";
 };
 
-export class DisplayGraphicLine extends LCDCommand {
+export class DisplayGraphicLine extends DisplayCommand {
     colCount: number;
-    data: string;
+    data: number[];
 
-    constructor(colCount: number, data: string) {
-        super("DisplayGraphicLine");
+    print = () => `data: [${this.data.map(d => d.toString(16)).join(", ")}]`;
+
+    constructor(colCount: number, data: number[], initialCommand: string) {
+        super("DisplayGraphicLine", initialCommand);
 
         this.colCount = colCount;
         this.data = data;

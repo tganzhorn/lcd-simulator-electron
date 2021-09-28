@@ -1,54 +1,34 @@
-import { CommandBar, DetailsList, IColumn, ICommandBarItemProps, SelectionMode } from "@fluentui/react";
-import { useEffect } from "react";
+import { DetailsList, DetailsListLayoutMode, IColumn, SelectionMode, Selection, PrimaryButton, Text } from "@fluentui/react";
+import { Fragment, useCallback, useEffect } from "react";
 import { FunctionComponent, useState } from "react";
-import { LCDCommand } from "../classes/CommandParser";
-import { printTime } from "../utils";
+import { DisplayCommand } from "../classes/CommandParser";
 import { Card } from "./Card";
+import { Tooltip } from './Tooltip';
 
-export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], clear: () => void, clearAll: () => void }> = ({ commands, clear, clearAll }) => {
+export const DisplayCommandView: FunctionComponent<{ commands: DisplayCommand[], showHistory: (command: DisplayCommand | undefined) => void }> = ({ commands, showHistory }) => {
     const [reverse, setReverse] = useState<boolean>(true);
-    const [commandsCopy, setCommandsCopy] = useState<LCDCommand[]>([]);
+    const [commandsCopy, setCommandsCopy] = useState<DisplayCommand[]>([]);
+    const [freeze, setFreeze] = useState<boolean>(false);
 
     useEffect(() => {
+        if (freeze) return;
+        setCommandsCopy(() => reverse ? [...commands].reverse() : [...commands]);
         const handle = window.setInterval(() => {
             setCommandsCopy(() => reverse ? [...commands].reverse() : [...commands]);
-        }, 500);
+        }, 1000);
 
         return () => {
             window.clearInterval(handle);
         }
-    }, [commands, reverse]);
+    }, [commands, reverse, freeze]);
 
-    useEffect(() => {
-        setCommandsCopy(() => reverse ? commands.slice().reverse() : commands.slice());
-    }, [reverse, commands]);
+    const toggleFreeze = useCallback(() => {
+        setFreeze(pause => !pause);
+    }, []);
 
-    const commandBardItems: ICommandBarItemProps[] = [
-        {
-            key: "clearDisplay",
-            text: "Clear display log",
-            iconProps: {
-                iconName: "Clear"
-            },
-            onClick: () => {
-                clear();
-                commands.length = 0;
-                setCommandsCopy([...commands])
-            }
-        },
-        {
-            key: "clearAll",
-            text: "Clear all",
-            iconProps: {
-                iconName: "Clear"
-            },
-            onClick: () => {
-                clearAll();
-                commands.length = 0;
-                setCommandsCopy([...commands])
-            }
-        }
-    ];
+    const handleReverse = useCallback(() => {
+        setReverse(state => !state);
+    }, []);
 
     const columns: IColumn[] = [
         {
@@ -60,40 +40,65 @@ export const DisplayCommandView: FunctionComponent<{ commands: LCDCommand[], cle
             data: "timestamp",
             isSorted: true,
             isSortedDescending: !reverse,
-            onRender: (command: LCDCommand) => printTime(command.timestamp),
-            onColumnClick: () => setReverse(state => !state)
+            onRender: (command: DisplayCommand) => command.printTime(),
+            onColumnClick: handleReverse
         },
         {
             key: "type",
             name: "Type",
             minWidth: 50,
-            maxWidth: 150,
+            maxWidth: 100,
             data: "string",
-            fieldName: "type",
-            isMultiline: true
+            fieldName: "initialCommand",
+            isMultiline: true,
         },
         {
-            key: "text",
-            name: "Text",
+            key: "info",
+            name: "Info",
             minWidth: 50,
-            maxWidth: 150,
             data: "string",
-            fieldName: "text",
+            onRender: (command: DisplayCommand) => command.print().split('\n').map((s, i) => <Fragment key={i}>{s}<br /></Fragment>),
             isMultiline: true
         },
     ]
 
+    const selection = new Selection({
+        onSelectionChanged: () => {
+            const selected = selection.getSelection()[0] as DisplayCommand | undefined;
+            setFreeze(selected !== undefined);
+            showHistory(selected);
+        },
+        getKey: (item: any) => (item as DisplayCommand).id
+    });
+
     return (
         <Card>
-            <div style={{height: 210, overflowY: "scroll"}}>
+            <div style={{ height: 214, overflowY: "scroll" }}>
                 <DetailsList
                     columns={columns}
                     items={commandsCopy}
-                    selectionMode={SelectionMode.none}
+                    selectionMode={SelectionMode.single}
+                    selection={selection}
+                    layoutMode={DetailsListLayoutMode.justified}
                     compact={true}
+                    setKey="id"
+                    getKey={(item: any) => item.id}
+                    getCellValueKey={(item: any) => item.id}
                 />
+                {
+                    commandsCopy.length === 0 ? (
+                        <Text style={{textAlign: "center"}}><h4>We haven't received anything yet! 😢</h4></Text>
+                    ) : null
+                }
             </div>
-            <CommandBar items={commandBardItems} />
+            <Tooltip content="Freezes and unfreezes the view. (No new data will appear)">
+                <PrimaryButton
+                    iconProps={{ iconName: freeze ? "Play" : "Pause" }}
+                    text={freeze ? "Unfreeze" : "Freeze"}
+                    onClick={toggleFreeze}
+                    style={{ margin: 4 }}
+                />
+            </Tooltip>
         </Card>
     )
 }

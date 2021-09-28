@@ -1,50 +1,11 @@
-import { CommandBar, ICommandBarItemProps, DetailsList, IColumn, SelectionMode } from "@fluentui/react";
+import { DetailsList, IColumn, SelectionMode, Text } from "@fluentui/react";
 import { FunctionComponent, useState } from "react";
-import { DebugNumberCommand, DebugNumberModes, DebugTextCommand, isDebugNumberCommand, isDebugTextCommand } from "../classes/CommandParser";
-import { printTime, fillZeroes } from '../utils';
+import { DebugCommand } from "../classes/CommandParser";
 import { Card } from './Card';
 
-const printNumber = (number: number, mode: DebugNumberModes) => {
-    if (mode === "u8hex") {
-        return `0x${fillZeroes(number.toString(16), 2)}`;
-    }
-    if (mode === "u16hex") {
-        return `0x${fillZeroes(number.toString(16), 4)}`;
-    }
-    if (mode === "u32hex") {
-        return `0x${fillZeroes(number.toString(16), 8)}`;
-    }
-    if (mode === "u8bin") {
-        return `0b${fillZeroes(number.toString(2), 8)}`;
-    }
-    if (mode === "u16bin") {
-        return `0b${fillZeroes(number.toString(2), 16)}`;
-    }
-    return number.toString();
-}
-
-export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand | DebugNumberCommand)[], clear: () => void, clearAll: () => void }> = ({ commands, clear, clearAll }) => {
+export const DebugCommandView: FunctionComponent<{ commands: DebugCommand[]}> = ({ commands }) => {
     const [reverse, setReverse] = useState<boolean>(true);
-    const commandsCopy = reverse ? commands.slice().reverse() : commands.slice();
-
-    const commandBarItems: ICommandBarItemProps[] = [
-        {
-            key: "clearDebug",
-            text: "Clear debug log",
-            iconProps: {
-                iconName: "Clear"
-            },
-            onClick: clear
-        },
-        {
-            key: "clearAll",
-            text: "Clear all",
-            iconProps: {
-                iconName: "Clear"
-            },
-            onClick: clearAll
-        }
-    ];
+    const commandsCopy = reverse ? [...commands].reverse() : [...commands];
 
     const columns: IColumn[] = [
         {
@@ -56,7 +17,7 @@ export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand |
             data: "timestamp",
             isSorted: true,
             isSortedDescending: !reverse,
-            onRender: (command: DebugTextCommand | DebugNumberCommand) => printTime(command.timestamp),
+            onRender: (command: DebugCommand) => command.printTime(),
             onColumnClick: () => setReverse(state => !state)
         },
         {
@@ -67,21 +28,7 @@ export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand |
             data: "string",
             fieldName: "text",
             isMultiline: true,
-            onRender: (command: DebugTextCommand | DebugNumberCommand) => {
-                if (isDebugTextCommand(command)) {
-                    let color = "";
-                    let icon = "";
-                    if (command.mode === "error") {
-                        icon = "❌ ";
-                        color = "darkred";
-                    }
-                    if (command.mode === "ok") {
-                        icon = "✔ ";
-                        color = "darkgreen";
-                    }
-                    return <span style={{color}}>{icon + command.text}</span>
-                }
-            }
+            onRender: (command: DebugCommand) => command.printText()
         },
         {
             key: "number",
@@ -89,25 +36,29 @@ export const DebugCommandView: FunctionComponent<{ commands: (DebugTextCommand |
             data: "number",
             minWidth: 50,
             fieldName: "number",
-            onRender: (command: DebugTextCommand | DebugNumberCommand) => {
-                if (isDebugNumberCommand(command)) {
-                    return printNumber(command.number, command.mode);
-                }
-            }
+            isMultiline: true,
+            onRender: (command: DebugCommand) => command.printNumber()
         }
-    ]
+    ];
 
     return (
         <Card>
-            <div style={{height: 210, overflowY: "scroll"}}>
+            <div style={{height: 254, overflowY: "scroll"}}>
                 <DetailsList
                     columns={columns}
                     items={commandsCopy}
-                    selectionMode={SelectionMode.none}
+                    selectionMode={SelectionMode.single}
                     compact={true}
+                    getKey={(item: any) => item.id}
+                    setKey="id"
+                    isPlaceholderData
                 />
+                {
+                    commandsCopy.length === 0 ? (
+                        <Text style={{textAlign: "center"}}><h4>We haven't received anything yet! 😢</h4></Text>
+                    ) : null
+                }
             </div>
-            <CommandBar items={commandBarItems} />
         </Card>
     )
 }

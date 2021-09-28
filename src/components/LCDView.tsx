@@ -1,16 +1,41 @@
 import { Card } from "./Card";
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import { CommandBar, ICommandBarItemProps, Text } from '@fluentui/react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { Checkbox, Icon, PrimaryButton } from '@fluentui/react';
 import { WebGLLCDRenderer, font5x7, LCDCharBuffer } from "../classes/WebGLLCDRenderer";
 import { Tooltip } from "./Tooltip";
 import toast from 'react-hot-toast';
+import { DisplayCommand, isDisplayClearCommand } from "../classes/CommandParser";
+import { Cursor } from "./Cursor";
+import { FlashLight } from "./FlashLight";
+import { MonoNumber, MonoNumberRef } from "./MonoNumber";
 
-export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => {
+export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {reset: () => void}>(({reset}, ref) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const lcdWebGLRenderer = useRef<WebGLLCDRenderer>();
     const lightRef = useRef<HTMLDivElement>(null);
     const lightRaf = useRef<number>(-1);
-    const cmdRef = useRef<HTMLSpanElement>(null);
+    const rowRef = useRef<MonoNumberRef>(null);
+    const columnRef = useRef<MonoNumberRef>(null);
+    const cmdRef = useRef<MonoNumberRef>(null);
+    const rogcd = useRef<boolean>(false);
+    const cursorRef = useRef<HTMLDivElement>(null);
+
+    const handleReset = useCallback(() => {
+        if (lcdWebGLRenderer.current) {
+            lcdWebGLRenderer.current.reset();
+            reset();
+        };
+    }, [reset]);
+
+    const handleResetOnLCDClear = useCallback((_: any, checked: boolean = false) => {
+        rogcd.current = checked;
+    }, []);
+
+    const handleCursorToggle = useCallback((_: any, checked: boolean = false) => {
+        if(cursorRef.current) {
+            cursorRef.current.style.visibility = checked ? "visible" : "hidden";
+        }
+    }, []);
 
     useEffect(() => {
         if (!canvasRef.current) return;
@@ -27,7 +52,11 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
         const renderer = new WebGLLCDRenderer(gl, 128, 64, charBuffer);
         renderer.startTicker();
 
-        renderer.onReceiveCommand = () => {
+        renderer.onReceiveCommand = (command: DisplayCommand) => {
+            if (isDisplayClearCommand(command) && rogcd.current) {
+                return handleReset();
+            }
+
             if (!lightRef.current) return;
 
             window.clearTimeout(lightRaf.current);
@@ -43,9 +72,19 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
         }
 
         renderer.onDraw = () => {
-            if (!cmdRef.current) return;
+            if (rowRef.current && columnRef.current) {
+                rowRef.current.setNumber(renderer.cursorRow);
+                columnRef.current.setNumber(renderer.cursorColumn);
+            };
 
-            cmdRef.current.innerHTML = renderer.commandsReceived.toString();
+            if (cmdRef.current) {
+                cmdRef.current.setNumber(renderer.commandsReceived);
+            };
+
+            if (cursorRef.current) {
+                cursorRef.current.style.left = 7 + renderer.cursorColumn * 21.1875 + 'px';
+                cursorRef.current.style.top = 3.5 + renderer.cursorRow * 28.25 + 'px';
+            }
         }
 
         lcdWebGLRenderer.current = renderer;
@@ -54,28 +93,13 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
             renderer.destroy();
             window.clearTimeout(lightRaf.current);
         }
-    }, []);
-
-    const commandBarItems: ICommandBarItemProps[] = [
-        {
-            key: "reset",
-            text: "Reset LCD",
-            iconProps: {
-                iconName: "RevToggleKey"
-            },
-            onClick: () => {
-                if (lcdWebGLRenderer.current) {
-                    lcdWebGLRenderer.current.clearLines();
-                    lcdWebGLRenderer.current.commandsReceived = 0;
-                }
-            }
-        },
-    ];
+    }, [handleReset]);
 
     useImperativeHandle(ref, () => lcdWebGLRenderer.current);
 
-    return (
+    return useMemo(() => (
         <Card style={{ display: "flex", flexDirection: "column" }}>
+            <Cursor ref={cursorRef} />
             <div style={{ position: "relative", backgroundColor: "#5DFF00" }} className="lcd">
                 <canvas
                     ref={canvasRef}
@@ -94,18 +118,32 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {}>((_, ref) => 
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingLeft: 8 }}>
                 <Tooltip content="Flashes green on receiving commands.">
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                        <Text>RX:</Text>
-                        <div ref={lightRef} style={{ transition: "all ease 0.1s", marginLeft: 8, backgroundColor: "#aaa", borderRadius: "50%", width: 16, height: 16 }}></div>
+                        <FlashLight ref={lightRef} />
+                </Tooltip>
+                <Tooltip content="Displays current row and column.">
+                    <div style={{ display: "flex", alignItems: "center", columnGap: 4 }}>
+                        <Icon iconName="LineThickness" />
+                        <MonoNumber min={0} max={8} digits={2} defaultValue={0} ref={rowRef} />
+                        <Icon iconName="TripleColumn" />
+                        <MonoNumber min={0} max={20} digits={2} defaultValue={0} ref={columnRef} />
                     </div>
                 </Tooltip>
                 <Tooltip content="Shows the amount of received commands.">
-                    <div>
-                        <Text style={{ fontSize: 14 }}>CMD(s): <span ref={cmdRef} style={{ fontFamily: "Roboto Mono", color: "lightblue" }}>0</span></Text>
+                    <div style={{display: "flex", alignItems: "center", columnGap: 4}}>
+                        <Icon iconName="Communications" />
+                        <MonoNumber ref={cmdRef} min={0} max={999} digits={3} defaultValue={0} />
                     </div>
                 </Tooltip>
-                <CommandBar items={commandBarItems} />
+                <Tooltip content="Reset LCD Simulator on GLCD_ClearDisplay.">
+                    <Checkbox onChange={handleResetOnLCDClear} label="RoGCD" />
+                </Tooltip>
+                <Tooltip content="Toggles cursor visibility.">
+                    <Checkbox onChange={handleCursorToggle} defaultChecked={true} label="Cursor" />
+                </Tooltip>
+                <Tooltip content="Reset LCD Simulator with all its data.">
+                    <PrimaryButton text="Reset" style={{margin: 4}} onClick={handleReset}></PrimaryButton>
+                </Tooltip>
             </div>
         </Card>
-    )
+    ), [handleCursorToggle, handleReset, handleResetOnLCDClear]);
 });
