@@ -31,7 +31,7 @@ This project is a simple LCD Simulator for the Mikrocontroller-Labor-Board ([HS-
 ![Electron.js](https://img.shields.io/badge/Electron-191970?style=for-the-badge&logo=Electron&logoColor=white)
 
 
-Build with [electron](https://www.electronjs.org/), [react](https://reactjs.org/) and [typescript](https://www.typescriptlang.org/).
+Built with [electron](https://www.electronjs.org/), [react](https://reactjs.org/) and [typescript](https://www.typescriptlang.org/).
 ***
 ## Development
 ### IDE
