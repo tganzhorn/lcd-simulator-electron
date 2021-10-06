@@ -23,7 +23,7 @@ function App() {
   const [serialPort, setSerialPort] = useState<SerialPort>();
   const [debugCommands, setDebugCommands] = useState<DebugCommand[]>([]);
   const commands = useRef<DisplayCommand[]>([]);
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(true);
   const lcdRef = useRef<WebGLLCDRenderer | undefined>();
 
   const readerRef = useRef<ReadableStreamDefaultReader<any>>();
