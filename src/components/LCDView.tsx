@@ -1,6 +1,6 @@
 import { Card } from "./Card";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
-import { Checkbox, Icon, PrimaryButton } from '@fluentui/react';
+import { Icon, IconButton, Toggle } from '@fluentui/react';
 import { WebGLLCDRenderer, font5x7, LCDCharBuffer } from "../classes/WebGLLCDRenderer";
 import { Tooltip } from "./Tooltip";
 import toast from 'react-hot-toast';
@@ -116,7 +116,7 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {reset: () => vo
                 >
                 </canvas>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingLeft: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingLeft: 8 }}>
                 <Tooltip content="Flashes green on receiving commands.">
                         <FlashLight ref={lightRef} />
                 </Tooltip>
@@ -135,13 +135,13 @@ export const LCDView = forwardRef<WebGLLCDRenderer | undefined, {reset: () => vo
                     </div>
                 </Tooltip>
                 <Tooltip content="Reset LCD Simulator on GLCD_ClearDisplay.">
-                    <Checkbox onChange={handleResetOnLCDClear} label="RoGCD" />
+                    <Toggle onChange={handleResetOnLCDClear} onText="RoGCD" offText="RoGCD" />
                 </Tooltip>
                 <Tooltip content="Toggles cursor visibility.">
-                    <Checkbox onChange={handleCursorToggle} defaultChecked={true} label="Cursor" />
+                    <Toggle onChange={handleCursorToggle} defaultChecked={true} onText="Cursor" offText="Cursor" />
                 </Tooltip>
                 <Tooltip content="Reset LCD Simulator with all its data.">
-                    <PrimaryButton text="Reset" style={{margin: 4}} onClick={handleReset}></PrimaryButton>
+                    <IconButton iconProps={{iconName: "Refresh"}} style={{margin: 4}} onClick={handleReset} />
                 </Tooltip>
             </div>
         </Card>
