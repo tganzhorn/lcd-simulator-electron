@@ -66,10 +66,13 @@
     "directories": {
       "buildResources": "./public"
     },
+    "nsis": {
+      "artifactName": "${productName}-${version}-installer.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
     "win": {
-      "target": "nsis",
-      "icon": "./public/ms-icon-310x310.png",
-      "artifactName": "${productName}-${version}-installer.${ext}"
+      "icon": "./public/ms-icon-310x310.png"
     }
   }
 }
